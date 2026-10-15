@@ -67,7 +67,8 @@ Abrir http://127.0.0.1:8000 para comprobar la respuesta inicial.
 - Ruta inicial con respuesta JSON.
 - Sesiones y caché almacenadas en archivos.
 - Conexión MySQL declarada, pendiente de crear la base y el usuario.
-- Migraciones del dominio pendientes de implementar.
+- Migraciones de roles y usuarios implementadas.
+- Migraciones de categorías, proveedores, productos y movimientos pendientes.
 
 ## Configuración local
 
@@ -190,3 +191,43 @@ Listar las rutas de la API desde `backend`:
 ```powershell
 php artisan route:list --path=api
 ```
+
+## Migraciones de roles y usuarios
+
+Se reemplazó la migración predeterminada de `users` por las tablas
+`roles` y `usuarios`, siguiendo el diccionario de datos del proyecto.
+
+### Roles
+
+- `id_rol`: clave primaria entera autoincremental.
+- `nombre`: obligatorio, único y de hasta 30 caracteres.
+- `created_at` y `updated_at`: fechas de seguimiento.
+
+### Usuarios
+
+- `id_usuario`: clave primaria entera autoincremental.
+- `nombre`: obligatorio, hasta 100 caracteres.
+- `usuario`: obligatorio, único y de hasta 50 caracteres.
+- `contrasena_hash`: campo de hasta 255 caracteres para el hash.
+- `id_rol`: clave foránea obligatoria hacia `roles.id_rol`.
+- `estado`: activo o inactivo; activo por defecto.
+- `created_at` y `updated_at`: fechas de seguimiento.
+
+Un rol puede tener muchos usuarios.
+No se permite eliminar un rol que tenga usuarios asociados.
+
+Desde la carpeta `backend`, aplicar las migraciones:
+
+```powershell
+php artisan migrate
+```
+
+Consultar su estado:
+
+```powershell
+php artisan migrate:status
+```
+
+Los datos iniciales se incorporarán posteriormente mediante seeders.
+La adaptación de los modelos y de la configuración de autenticación
+a estos nombres de tablas y campos se realizará en la etapa de modelos.
