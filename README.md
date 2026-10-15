@@ -144,3 +144,49 @@ exit
 ```
 
 Las contraseñas locales no deben incluirse en el repositorio.
+
+## Organización del Back-End
+
+- `backend/routes/api.php`: rutas de la API con prefijo `/api`.
+- `backend/routes/web.php`: rutas web.
+- `backend/app/Http/Controllers`: controladores HTTP.
+- `backend/app/Services`: reglas y operaciones de negocio.
+- `backend/app/Models`: modelos de persistencia.
+- `backend/database/migrations`: estructura de las tablas.
+- `backend/resources/views`: vistas de Laravel.
+- `backend/public`: punto de entrada HTTP y archivos públicos.
+- `backend/bootstrap/app.php`: registro de rutas y configuración de errores.
+
+La carpeta de servicios está preparada para incorporar la lógica de
+los módulos.
+
+## Comprobación de la API
+
+Iniciar el servidor desde `backend`:
+
+```powershell
+php artisan serve
+```
+
+Consultar:
+
+```text
+GET http://127.0.0.1:8000/api/estado
+```
+
+Esta ruta devuelve el nombre de la aplicación y el estado del servidor.
+No consulta la base de datos.
+
+Las excepciones de las rutas `/api` y `/api/*` se devuelven en JSON.
+
+Comportamientos verificados:
+
+- `GET /api/estado`: HTTP 200.
+- `GET /api/no-existe`: HTTP 404.
+- `POST /api/estado`: HTTP 405.
+
+Listar las rutas de la API desde `backend`:
+
+```powershell
+php artisan route:list --path=api
+```
