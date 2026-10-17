@@ -67,8 +67,9 @@ Abrir http://127.0.0.1:8000 para comprobar la respuesta inicial.
 - Ruta inicial con respuesta JSON.
 - Sesiones y caché almacenadas en archivos.
 - Conexión MySQL declarada, pendiente de crear la base y el usuario.
-- Migraciones de roles, usuarios, categorías y proveedores implementadas.
-- Migraciones de productos y movimientos pendientes.
+- Migraciones de las seis entidades principales implementadas:
+  roles, usuarios, categorías, proveedores, productos y movimientos.
+- Modelos, relaciones Eloquent y datos iniciales pendientes.
 
 ## Configuración local
 
@@ -262,3 +263,49 @@ Ambas tablas utilizan InnoDB. Sus relaciones con productos se definirán
 en la migración de productos.
 
 Los registros iniciales se incorporarán mediante seeders.
+
+## Productos y movimientos
+
+### Productos
+
+La tabla `productos` almacena código único, nombre, descripción,
+categoría, proveedor, precios, existencia disponible, existencia mínima,
+fecha de ingreso y estado.
+
+Los precios utilizan DECIMAL(10,2) y restricciones CHECK que impiden
+valores negativos. Las cantidades utilizan enteros sin signo.
+
+Los estados administrativos son activo y descontinuado.
+Los productos agotados se identifican por existencia disponible igual
+a cero.
+
+Las categorías y proveedores asociados no pueden eliminarse mientras
+tengan productos relacionados.
+
+### Movimientos
+
+La tabla `movimientos` almacena producto, usuario responsable, tipo,
+motivo, cantidad, existencia resultante, fecha y observaciones.
+
+Los tipos son entrada y salida.
+
+Los motivos disponibles son compra, reposicion, devolucion, venta,
+perdida, dano y ajuste.
+
+La cantidad debe ser mayor que cero y la existencia resultante no
+puede ser negativa.
+
+No se permite eliminar productos ni usuarios que tengan movimientos
+asociados.
+
+### Integración con la lógica de inventario
+
+El servicio de movimientos deberá verificar la disponibilidad antes
+de una salida y realizar, dentro de una transacción, la actualización
+de existencias y el registro del movimiento.
+
+También deberá validar la correspondencia entre tipo y motivo,
+los permisos del usuario y la conservación del historial.
+
+Las migraciones crean la estructura; no actualizan automáticamente
+las existencias.
