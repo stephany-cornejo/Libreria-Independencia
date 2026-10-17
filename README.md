@@ -26,7 +26,7 @@ El Front-End React se incorporará en una etapa posterior.
 Clonar el repositorio:
 
 ```powershell
-git clone https://github.com/Jorged99/libreria-independencia.git
+git clone https://github.com/stephany-cornejo/Libreria-Independencia
 ```
 
 Entrar al Back-End:
@@ -67,8 +67,8 @@ Abrir http://127.0.0.1:8000 para comprobar la respuesta inicial.
 - Ruta inicial con respuesta JSON.
 - Sesiones y caché almacenadas en archivos.
 - Conexión MySQL declarada, pendiente de crear la base y el usuario.
-- Migraciones de roles y usuarios implementadas.
-- Migraciones de categorías, proveedores, productos y movimientos pendientes.
+- Migraciones de roles, usuarios, categorías y proveedores implementadas.
+- Migraciones de productos y movimientos pendientes.
 
 ## Configuración local
 
@@ -231,3 +231,34 @@ php artisan migrate:status
 Los datos iniciales se incorporarán posteriormente mediante seeders.
 La adaptación de los modelos y de la configuración de autenticación
 a estos nombres de tablas y campos se realizará en la etapa de modelos.
+
+## Categorías y proveedores
+
+Se implementaron las tablas `categorias` y `proveedores` mediante
+migraciones.
+
+### Categorías
+
+- Identificador entero autoincremental: `id_categoria`.
+- Nombre obligatorio de hasta 50 caracteres.
+- Descripción opcional de hasta 150 caracteres.
+- Estado activo o inactivo, con activo como valor predeterminado.
+- Fechas de creación y modificación.
+
+### Proveedores
+
+- Identificador entero autoincremental: `id_proveedor`.
+- Nombre obligatorio de hasta 100 caracteres.
+- Teléfono opcional de hasta 20 caracteres.
+- Correo opcional de hasta 100 caracteres.
+- Dirección opcional de hasta 150 caracteres.
+- Estado activo o inactivo, con activo como valor predeterminado.
+- Fechas de creación y modificación.
+
+El campo `estado` complementa el diccionario inicial para cumplir los
+requerimientos de activación y desactivación de categorías y proveedores.
+
+Ambas tablas utilizan InnoDB. Sus relaciones con productos se definirán
+en la migración de productos.
+
+Los registros iniciales se incorporarán mediante seeders.
