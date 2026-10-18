@@ -398,3 +398,67 @@ No implementa el servicio operativo de movimientos ni el login.
 
 La factory UserFactory utiliza los campos de la tabla usuarios y
 asigna el rol Empleado, creándolo si todavía no existe.
+
+## Pruebas de persistencia e integridad
+
+Las pruebas utilizan MySQL y una base independiente:
+
+`libreria_independencia_testing`
+
+### Preparación
+
+Crear la base y conceder acceso al usuario técnico:
+
+```sql
+CREATE DATABASE libreria_independencia_testing
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+GRANT ALL PRIVILEGES
+ON libreria_independencia_testing.*
+TO 'libreria_app'@'127.0.0.1';
+```
+
+Desde `backend`, crear la configuración local de pruebas:
+
+```powershell
+Copy-Item .env .env.testing
+```
+
+Configurar en `.env.testing`:
+
+- APP_ENV=testing
+- DB_DATABASE=libreria_independencia_testing
+- SESSION_DRIVER=array
+- CACHE_STORE=array
+- QUEUE_CONNECTION=sync
+
+Conservar las credenciales locales de MySQL.
+
+Aplicar las migraciones:
+
+```powershell
+php artisan config:clear
+php artisan migrate --env=testing
+```
+
+No se requieren los seeders de demostración.
+
+### Ejecución
+
+```powershell
+php artisan test --filter=PersistenciaInventarioTest
+```
+
+Las pruebas comprueban persistencia, relaciones, protección del hash,
+unicidad del código, precios y existencias no negativos, cantidades
+positivas, claves foráneas, protección de productos con historial y
+reversión de operaciones mediante transacciones.
+
+Cada prueba revierte sus cambios mediante DatabaseTransactions.
+
+El archivo `.env.testing` contiene configuración privada y no se
+incluye en el repositorio.
+
+Las pruebas del servicio operativo de movimientos corresponderán
+a la implementación de ese módulo.
