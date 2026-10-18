@@ -69,7 +69,9 @@ Abrir http://127.0.0.1:8000 para comprobar la respuesta inicial.
 - Conexión MySQL declarada, pendiente de crear la base y el usuario.
 - Migraciones de las seis entidades principales implementadas:
   roles, usuarios, categorías, proveedores, productos y movimientos.
-- Modelos, relaciones Eloquent y datos iniciales pendientes.
+- Modelos Eloquent y relaciones implementados.
+- Modelo User adaptado a la tabla usuarios.
+- Datos iniciales pendientes.
 
 ## Configuración local
 
@@ -309,3 +311,47 @@ los permisos del usuario y la conservación del historial.
 
 Las migraciones crean la estructura; no actualizan automáticamente
 las existencias.
+
+## Modelos Eloquent
+
+| Modelo | Tabla | Clave primaria |
+|---|---|---|
+| Rol | roles | id_rol |
+| User | usuarios | id_usuario |
+| Categoria | categorias | id_categoria |
+| Proveedor | proveedores | id_proveedor |
+| Producto | productos | id_producto |
+| Movimiento | movimientos | id_movimiento |
+
+Las relaciones permiten consultar usuarios por rol, productos por
+categoría y proveedor, y movimientos por producto y usuario.
+
+Los modelos definen campos permitidos para asignación masiva mediante
+`fillable`. Los controladores y servicios deben aplicar además las
+validaciones y autorizaciones correspondientes.
+
+### Usuario y autenticación
+
+El modelo `App\Models\User` utiliza la tabla `usuarios` y la clave
+primaria `id_usuario`.
+
+El campo de contraseña es `contrasena_hash`. Su cast `hashed` protege
+las contraseñas asignadas mediante Eloquent y el campo se oculta al
+convertir el modelo a un arreglo o JSON.
+
+Las escrituras directas mediante SQL o Query Builder no ejecutan los
+casts del modelo.
+
+No se utiliza token de recordar sesión.
+
+El módulo de autenticación deberá validar el campo `usuario`,
+la contraseña y el estado activo de la cuenta.
+
+### Inventario
+
+Los modelos no actualizan automáticamente el stock al crear movimientos.
+Esa operación deberá implementarse en el servicio de inventario,
+utilizando una transacción.
+
+La factory y el seeder predeterminados de usuarios se adaptarán antes
+de generar los datos iniciales.
