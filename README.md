@@ -71,7 +71,8 @@ Abrir http://127.0.0.1:8000 para comprobar la respuesta inicial.
   roles, usuarios, categorías, proveedores, productos y movimientos.
 - Modelos Eloquent y relaciones implementados.
 - Modelo User adaptado a la tabla usuarios.
-- Datos iniciales pendientes.
+- Seeders de demostración y factory de usuarios implementados.
+- Relaciones verificadas con datos iniciales.
 
 ## Configuración local
 
@@ -355,3 +356,45 @@ utilizando una transacción.
 
 La factory y el seeder predeterminados de usuarios se adaptarán antes
 de generar los datos iniciales.
+
+## Datos de demostración
+
+Desde la carpeta `backend`, con APP_ENV=local y las migraciones aplicadas:
+
+```powershell
+php artisan db:seed
+```
+
+La carga incluye:
+
+- 2 roles: Administrador y Empleado.
+- 2 usuarios: admin.libreria y empleado.libreria.
+- 3 categorías.
+- 2 proveedores ficticios.
+- 3 productos.
+- 3 entradas iniciales de inventario.
+
+Las contraseñas se solicitan en la terminal al crear las cuentas.
+Deben tener al menos 12 caracteres y no se almacenan en el repositorio.
+
+Orden de ejecución:
+
+1. RolSeeder.
+2. UsuarioSeeder.
+3. CatalogoSeeder.
+4. InventarioDemoSeeder.
+
+La carga completa se ejecuta dentro de una transacción.
+
+Repetirla conserva los registros identificados por los seeders:
+no cambia contraseñas, no repone existencias y no duplica las
+entradas iniciales de productos existentes.
+
+Los productos de ejemplo permiten probar existencias sobre el mínimo,
+en el mínimo y por debajo del mínimo.
+
+Esta carga está destinada al desarrollo local.
+No implementa el servicio operativo de movimientos ni el login.
+
+La factory UserFactory utiliza los campos de la tabla usuarios y
+asigna el rol Empleado, creándolo si todavía no existe.
