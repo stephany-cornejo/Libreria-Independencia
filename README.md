@@ -462,3 +462,57 @@ incluye en el repositorio.
 
 Las pruebas del servicio operativo de movimientos corresponderán
 a la implementación de ese módulo.
+
+## Entrega técnica
+
+Consultar docs/ENTREGA.md para la instalación e integración de los módulos.
+
+## Respaldo y recuperación local
+
+Ejecutar estos comandos desde la raíz del repositorio en PowerShell.
+Ajustar la ruta de MySQL a la instalación de cada computadora.
+
+```powershell
+$mysqlBin = 'C:\wamp64\bin\mysql\mysql8.4.7\bin'
+New-Item -ItemType Directory -Path backups -Force
+```
+
+Crear un respaldo completo:
+
+```powershell
+& "$mysqlBin\mysqldump.exe" --host=127.0.0.1 --port=3306 --user=libreria_app --password --default-character-set=utf8mb4 --single-transaction --no-tablespaces --set-gtid-purged=OFF --result-file=backups/respaldo_commit_10.sql libreria_independencia
+```
+
+Introducir la contraseña técnica cuando se solicite.
+Comprobar que $LASTEXITCODE sea 0.
+
+El archivo incluye datos y hashes de cuentas y se conserva fuera de Git.
+Este nombre de archivo se sobrescribe si se repite el comando; utilizar
+nombres distintos para conservar respaldos de otras fechas.
+
+Durante este respaldo local no se modifican datos ni se ejecutan migraciones.
+
+### Recuperación de comprobación
+
+Crear una base vacía libreria_independencia_restauracion y conceder acceso
+a libreria_app desde la consola administrativa de MySQL.
+
+Conectarse desde PowerShell:
+
+```powershell
+& "$mysqlBin\mysql.exe" --host=127.0.0.1 --port=3306 --user=libreria_app --password --default-character-set=utf8mb4 libreria_independencia_restauracion
+```
+
+Dentro del cliente MySQL, ejecutar source seguido de la ruta absoluta
+del respaldo. Utilizar barras / en la ruta:
+
+```sql
+source C:/Users/DELL/Projects/Libreria-Independencia/backups/respaldo_commit_10.sql
+```
+
+Adaptar la ruta al equipo utilizado.
+
+Comprobar la base seleccionada y los registros restaurados.
+No cambiar el .env de desarrollo para esta comprobación.
+
+La recuperación fue comprobada en una base independiente.
