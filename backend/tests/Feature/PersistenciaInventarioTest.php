@@ -77,22 +77,34 @@ class PersistenciaInventarioTest extends TestCase
         ], $atributos));
     }
 
+    /**
+     * Comprueba que la base de datos rechaza la operación con un
+     * código de violación de restricción CHECK. MySQL 8.x devuelve
+     * 3819 y MariaDB 4025 para el mismo tipo de violación, por lo
+     * que se aceptan ambos códigos y la prueba sigue siendo
+     * significativa en cualquiera de los dos motores.
+     */
     private function comprobarRechazoMysql(
         callable $operacion,
-        int $codigoEsperado
+        int|array $codigosEsperados
     ): void {
         try {
             $operacion();
         } catch (QueryException $exception) {
-            $this->assertSame(
-                $codigoEsperado,
-                (int) $exception->errorInfo[1]
+            $codigo = (int) $exception->errorInfo[1];
+
+            $this->assertContains(
+                $codigo,
+                (array) $codigosEsperados,
+                'Se esperaba un rechazo con código '
+                    .implode(' o ', (array) $codigosEsperados)
+                    .", se recibió {$codigo}."
             );
 
             return;
         }
 
-        $this->fail('MySQL debía rechazar esta operación.');
+        $this->fail('La base de datos debía rechazar esta operación.');
     }
 
     public function test_guarda_producto_y_consulta_sus_relaciones(): void
@@ -176,11 +188,12 @@ class PersistenciaInventarioTest extends TestCase
     {
         $producto = $this->crearProducto();
 
+        // 3819 (MySQL) o 4025 (MariaDB): violación de CHECK.
         $this->comprobarRechazoMysql(
             fn () => $producto->update([
                 'precio_compra' => '-1.00',
             ]),
-            3819
+            [3819, 4025]
         );
     }
 
@@ -188,11 +201,12 @@ class PersistenciaInventarioTest extends TestCase
     {
         $producto = $this->crearProducto();
 
+        // 3819 (MySQL) o 4025 (MariaDB): violación de CHECK.
         $this->comprobarRechazoMysql(
             fn () => $producto->update([
                 'precio_venta' => '-1.00',
             ]),
-            3819
+            [3819, 4025]
         );
     }
 
@@ -212,11 +226,12 @@ class PersistenciaInventarioTest extends TestCase
     {
         $producto = $this->crearProducto();
 
+        // 3819 (MySQL) o 4025 (MariaDB): violación de CHECK.
         $this->comprobarRechazoMysql(
             fn () => $this->crearMovimiento($producto, [
                 'cantidad' => 0,
             ]),
-            3819
+            [3819, 4025]
         );
     }
 
