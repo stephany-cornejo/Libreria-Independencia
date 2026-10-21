@@ -40,6 +40,16 @@
 
                         @if (Auth::user()->rol->nombre === 'Administrador')
                             <a
+                                href="{{ route('categorias.index') }}"
+                                class="enlace-nav {{ request()->routeIs('categorias.*') ? 'activo' : '' }}"
+                            >Categorías</a>
+
+                            <a
+                                href="{{ route('proveedores.index') }}"
+                                class="enlace-nav {{ request()->routeIs('proveedores.*') ? 'activo' : '' }}"
+                            >Proveedores</a>
+
+                            <a
                                 href="{{ route('panel.configuracion') }}"
                                 class="enlace-nav {{ request()->routeIs('panel.configuracion') ? 'activo' : '' }}"
                             >Configuración</a>

@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\PanelController;
+use App\Http\Controllers\ProveedorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -60,4 +62,43 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
     Route::post('/panel/movimientos', [MovimientoController::class, 'guardar'])
         ->name('movimientos.guardar');
+
+    // Catálogos: reservados al rol Administrador (según ENTREGA).
+    Route::middleware('rol:Administrador')->group(function () {
+        Route::get('/panel/categorias', [CategoriaController::class, 'index'])
+            ->name('categorias.index');
+
+        Route::get('/panel/categorias/crear', [CategoriaController::class, 'crear'])
+            ->name('categorias.crear');
+
+        Route::post('/panel/categorias', [CategoriaController::class, 'guardar'])
+            ->name('categorias.guardar');
+
+        Route::get('/panel/categorias/{categoria}/editar', [CategoriaController::class, 'editar'])
+            ->name('categorias.editar');
+
+        Route::put('/panel/categorias/{categoria}', [CategoriaController::class, 'actualizar'])
+            ->name('categorias.actualizar');
+
+        Route::delete('/panel/categorias/{categoria}', [CategoriaController::class, 'eliminar'])
+            ->name('categorias.eliminar');
+
+        Route::get('/panel/proveedores', [ProveedorController::class, 'index'])
+            ->name('proveedores.index');
+
+        Route::get('/panel/proveedores/crear', [ProveedorController::class, 'crear'])
+            ->name('proveedores.crear');
+
+        Route::post('/panel/proveedores', [ProveedorController::class, 'guardar'])
+            ->name('proveedores.guardar');
+
+        Route::get('/panel/proveedores/{proveedor}/editar', [ProveedorController::class, 'editar'])
+            ->name('proveedores.editar');
+
+        Route::put('/panel/proveedores/{proveedor}', [ProveedorController::class, 'actualizar'])
+            ->name('proveedores.actualizar');
+
+        Route::delete('/panel/proveedores/{proveedor}', [ProveedorController::class, 'eliminar'])
+            ->name('proveedores.eliminar');
+    });
 });
