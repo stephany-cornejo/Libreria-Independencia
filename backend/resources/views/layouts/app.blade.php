@@ -33,6 +33,11 @@
                             class="enlace-nav {{ request()->routeIs('inventario.*') ? 'activo' : '' }}"
                         >Inventario</a>
 
+                        <a
+                            href="{{ route('movimientos.index') }}"
+                            class="enlace-nav {{ request()->routeIs('movimientos.*') ? 'activo' : '' }}"
+                        >Movimientos</a>
+
                         @if (Auth::user()->rol->nombre === 'Administrador')
                             <a
                                 href="{{ route('panel.configuracion') }}"

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\PanelController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,4 +51,13 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
     Route::delete('/panel/inventario/{producto}', [InventarioController::class, 'eliminar'])
         ->name('inventario.eliminar');
+
+    Route::get('/panel/movimientos', [MovimientoController::class, 'index'])
+        ->name('movimientos.index');
+
+    Route::get('/panel/movimientos/crear', [MovimientoController::class, 'crear'])
+        ->name('movimientos.crear');
+
+    Route::post('/panel/movimientos', [MovimientoController::class, 'guardar'])
+        ->name('movimientos.guardar');
 });
