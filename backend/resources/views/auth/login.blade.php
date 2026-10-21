@@ -16,28 +16,32 @@
         <form method="POST" action="{{ route('login.attempt') }}">
             @csrf
 
-            <label for="usuario">Usuario</label>
-            <input
-                id="usuario"
-                type="text"
-                name="usuario"
-                value="{{ old('usuario') }}"
-                autocomplete="username"
-                maxlength="50"
-                required
-                autofocus
-            >
+            <div class="campo">
+                <label for="usuario">Usuario</label>
+                <input
+                    id="usuario"
+                    type="text"
+                    name="usuario"
+                    value="{{ old('usuario') }}"
+                    autocomplete="username"
+                    maxlength="50"
+                    required
+                    autofocus
+                >
+            </div>
 
-            <label for="password">Contraseña</label>
-            <input
-                id="password"
-                type="password"
-                name="password"
-                autocomplete="current-password"
-                required
-            >
+            <div class="campo">
+                <label for="password">Contraseña</label>
+                <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
 
-            <button type="submit" class="boton">Entrar</button>
+            <button type="submit" class="boton boton-ancho">Entrar</button>
         </form>
     </div>
 @endsection

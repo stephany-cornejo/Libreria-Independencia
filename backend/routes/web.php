@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\PanelController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,4 +32,22 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
     Route::get('/panel/configuracion', [PanelController::class, 'configuracion'])
         ->middleware('rol:Administrador')
         ->name('panel.configuracion');
+
+    Route::get('/panel/inventario', [InventarioController::class, 'index'])
+        ->name('inventario.index');
+
+    Route::get('/panel/inventario/crear', [InventarioController::class, 'crear'])
+        ->name('inventario.crear');
+
+    Route::post('/panel/inventario', [InventarioController::class, 'guardar'])
+        ->name('inventario.guardar');
+
+    Route::get('/panel/inventario/{producto}/editar', [InventarioController::class, 'editar'])
+        ->name('inventario.editar');
+
+    Route::put('/panel/inventario/{producto}', [InventarioController::class, 'actualizar'])
+        ->name('inventario.actualizar');
+
+    Route::delete('/panel/inventario/{producto}', [InventarioController::class, 'eliminar'])
+        ->name('inventario.eliminar');
 });

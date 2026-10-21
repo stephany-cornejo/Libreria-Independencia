@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +16,9 @@ class Producto extends Model
     protected $fillable = [
         'codigo',
         'nombre',
+        'autor',
+        'editorial',
+        'isbn',
         'descripcion',
         'id_categoria',
         'id_proveedor',
@@ -64,5 +68,60 @@ class Producto extends Model
             'id_producto',
             'id_producto'
         );
+    }
+
+    /**
+     * Estado de existencias del libro para las alertas del inventario:
+     * 'agotado' (0 unidades), 'bajo' (até o por debajo del mínimo)
+     * o 'disponible' (por encima del mínimo).
+     */
+    public function estadoStock(): string
+    {
+        if ($this->cantidad_disponible <= 0) {
+            return 'agotado';
+        }
+
+        if ($this->cantidad_disponible <= $this->existencia_minima) {
+            return 'bajo';
+        }
+
+        return 'disponible';
+    }
+
+    /**
+     * Filtra por texto libre en título o autor (coincidencia parcial,
+     * escapando los comodines % y _ de SQL LIKE).
+     */
+    public function scopeTexto(Builder $query, string $texto): Builder
+    {
+        $escapado = addcslashes($texto, '%_\\');
+
+        return $query->where(function (Builder $sub) use ($escapado): void {
+            $sub->where('nombre', 'like', "%{$escapado}%")
+                ->orWhere('autor', 'like', "%{$escapado}%");
+        });
+    }
+
+    /**
+     * Filtra por disponibilidad usando los mismos criterios que
+     * estadoStock() para que la lista y las alertas coincidan.
+     */
+    public function scopeDisponibilidad(
+        Builder $query,
+        string $disponibilidad
+    ): Builder {
+        return match ($disponibilidad) {
+            'agotado' => $query->where('cantidad_disponible', 0),
+            'bajo' => $query
+                ->where('cantidad_disponible', '>', 0)
+                ->whereColumn(
+                    'cantidad_disponible',
+                    '<=',
+                    'existencia_minima'
+                ),
+            'disponible' => $query
+                ->whereColumn('cantidad_disponible', '>', 'existencia_minima'),
+            default => $query,
+        };
     }
 }
