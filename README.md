@@ -73,6 +73,15 @@ Abrir http://127.0.0.1:8000 para comprobar la respuesta inicial.
 - Modelo User adaptado a la tabla usuarios.
 - Seeders de demostración y factory de usuarios implementados.
 - Relaciones verificadas con datos iniciales.
+- Autenticación con login, logout y control de acceso por rol.
+- Panel de control con secciones para inventario, catálogos,
+  movimientos, reportes y configuración.
+- CRUD de usuarios para Administrador (listar, crear, editar,
+  activar/desactivar y eliminar cuentas).
+- Evento `StockBajo` con listener en cola `RegistrarAlertaStockBajo`
+  que registra alertas cuando un producto baja al mínimo.
+- Exportación SQL de estructura en `docs/database/estructura.sql`.
+- Documento de incidencias y pendientes en `docs/INCIDENCIAS.md`.
 
 ## Configuración local
 
@@ -313,6 +322,26 @@ los permisos del usuario y la conservación del historial.
 Las migraciones crean la estructura; no actualizan automáticamente
 las existencias.
 
+### Alerta de stock bajo
+
+Cuando un movimiento deja un producto con `cantidad_disponible`
+menor o igual a `existencia_minima`, el servicio de inventario
+dispara el evento `App\Events\StockBajo`.
+
+El listener `App\Listeners\RegistrarAlertaStockBajo` (implementa
+`ShouldQueue`) se registra en `App\Providers\AppServiceProvider`
+y ejecuta en la cola `database`. Su trabajo es insertar el registro
+de alerta correspondiente en la tabla de alertas del sistema.
+
+Para materializar las alertas en local:
+
+```powershell
+php artisan queue:work
+```
+
+La cola no tiene un worker permanente en este entorno; ver
+`docs/INCIDENCIAS.md` para las limitaciones asociadas.
+
 ## Modelos Eloquent
 
 | Modelo | Tabla | Clave primaria |
@@ -398,6 +427,36 @@ No implementa el servicio operativo de movimientos ni el login.
 
 La factory UserFactory utiliza los campos de la tabla usuarios y
 asigna el rol Empleado, creándolo si todavía no existe.
+
+## Módulo de usuarios
+
+El CRUD de usuarios está disponible en el panel para el rol
+Administrador, bajo las rutas `panel/usuarios`.
+
+- `GET panel/usuarios`: listado con búsqueda, filtro por rol y
+  paginación.
+- `GET panel/usuarios/crear`: formulario de creación.
+- `POST panel/usuarios`: guardado con validación.
+- `GET panel/usuarios/{usuario}/editar`: formulario de edición.
+- `PUT panel/usuarios/{usuario}`: actualización.
+- `DELETE panel/usuarios/{usuario}`: eliminación.
+
+Reglas de negocio aplicadas:
+
+- La contraseña es obligatoria al crear y opcional al editar;
+  si se envía, debe tener al menos 12 caracteres y se almacena
+  como hash.
+- No se puede eliminar la cuenta de la persona autenticada.
+- No se puede desactivar ni eliminar el último administrador
+  activo del sistema.
+- No se puede eliminar una cuenta que tenga movimientos
+  asociados (protección de la clave foránea).
+
+Componentes:
+
+- `app/Http/Controllers/UsuarioController.php`
+- `app/Http/Requests/GuardarUsuarioRequest.php`
+- `resources/views/usuarios/` (index, crear, editar, formulario)
 
 ## Pruebas de persistencia e integridad
 

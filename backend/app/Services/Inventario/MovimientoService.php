@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventario;
 
+use App\Events\StockBajo;
 use App\Models\Movimiento;
 use App\Models\Producto;
 use App\Models\User;
@@ -32,13 +33,15 @@ class MovimientoService
     /**
      * Registra un movimiento y actualiza las existencias del producto
      * de forma atómica. Lanza RuntimeException con mensaje en español
-     * si los datos no son aplicables.
+     * si los datos no son aplicables. Al confirmarse la transacción,
+     * si la existencia queda en el mínimo o por debajo se emite el
+     * evento StockBajo (procesado en la cola).
      */
     public function registrar(array $datos, User $usuario): Movimiento
     {
         $this->validarTipoYMotivo($datos['tipo'], $datos['motivo']);
 
-        return DB::transaction(function () use ($datos, $usuario): Movimiento {
+        $movimiento = DB::transaction(function () use ($datos, $usuario): Movimiento {
             /** @var Producto $producto */
             $producto = Producto::query()
                 ->whereKey($datos['id_producto'])
@@ -74,6 +77,26 @@ class MovimientoService
                 'observaciones' => $datos['observaciones'] ?? null,
             ]);
         });
+
+        $this->avisarStockBajo($movimiento);
+
+        return $movimiento;
+    }
+
+    /**
+     * Emite StockBajo solo cuando el movimiento dejó el libro en su
+     * mínimo o por debajo. Se emite después del commit para que el
+     * listener lea datos confirmados.
+     */
+    private function avisarStockBajo(Movimiento $movimiento): void
+    {
+        $producto = $movimiento->producto;
+
+        if ($producto !== null
+            && $producto->cantidad_disponible <= $producto->existencia_minima
+        ) {
+            StockBajo::dispatch($producto);
+        }
     }
 
     /**

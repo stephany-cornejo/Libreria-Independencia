@@ -26,6 +26,12 @@
 - Pruebas automatizadas sobre MySQL.
 - Exportación SQL de la estructura.
 - Respaldo y recuperación local verificados.
+- Autenticación con login, logout y control de acceso por rol.
+- Panel de control con inventario, catálogos, movimientos,
+  reportes y configuración.
+- CRUD de usuarios para Administrador.
+- Evento `StockBajo` con listener en cola para alertas de stock.
+- Documento de incidencias y pendientes (docs/INCIDENCIAS.md).
 
 ## Instalación desde una copia nueva
 
@@ -148,8 +154,14 @@ el respaldo de la base de la aplicación no los incluye.
 
 ## Funcionalidades a integrar
 
-- Autenticación y control de acceso.
-- CRUD y pantallas de los módulos.
-- Servicio operativo de movimientos.
-- Alertas y reportes.
+- ~~Autenticación y control de acceso.~~ (implementado)
+- ~~CRUD y pantallas de los módulos.~~ (implementado para usuarios,
+  categorías, proveedores, productos y movimientos)
+- ~~Servicio operativo de movimientos.~~ (implementado)
+- Alertas y reportes (alerta de stock bajo implementada;
+  reportes del equipo pendientes de fusión con
+  `origin/feature/modulos-grupo-2`).
 - Pruebas del flujo completo con los módulos del equipo.
+- PDF de entrega con portada, integrantes y enlaces
+  (pendiente de datos de integrantes y Product Backlog;
+  ver `docs/INCIDENCIAS.md`).
