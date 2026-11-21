@@ -1,0 +1,41 @@
+/* Estilos del Integrante 4. Se importa desde main.jsx: import './estilos-integrante4.css' */
+
+.rejilla-indicadores {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px;
+}
+.indicador { border-top: 4px solid var(--azul); display: flex; flex-direction: column; gap: 6px; padding: 16px; }
+.indicador-titulo { color: var(--gris); font-size: 13px; }
+.indicador-valor { font-size: 28px; }
+
+.rejilla-graficos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grafico-ancho { grid-column: 1 / -1; }
+.titulo-tabla { padding: 16px 16px 0; }
+
+.badge-warn { background: #fef3c7; color: #b45309; }
+
+.grupo-botones { display: flex; gap: 8px; }
+.pestanas { display: flex; gap: 6px; margin-bottom: 14px; }
+.pestanas button {
+  border: 0; background: #e5e7eb; padding: 8px 16px; border-radius: 8px; cursor: pointer; font: inherit;
+}
+.pestanas button.activa { background: var(--azul); color: #fff; }
+
+.filtro { margin-bottom: 0; min-width: 150px; }
+.filtro-ancho { flex: 1; min-width: 220px; }
+.filtros { align-items: flex-end; }
+.limpiar { align-self: flex-end; }
+
+.resumen-fila {
+  display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 14px; font-size: 14px; color: var(--gris);
+}
+.resumen-fila strong { color: var(--texto); font-size: 16px; }
+
+.formulario-linea {
+  display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; margin-bottom: 16px;
+}
+.formulario-linea label { margin-bottom: 0; }
+
+@media (max-width: 900px) {
+  .rejilla-graficos { grid-template-columns: 1fr; }
+  .formulario-linea { grid-template-columns: 1fr; }
+}
