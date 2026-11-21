@@ -347,6 +347,26 @@ class UsuarioTest extends TestCase
         ]);
     }
 
+    public function test_listado_filtra_por_rol_y_por_estado(): void
+    {
+        $administrador = $this->crearUsuario('Administrador');
+        $empleado = $this->crearUsuario('Empleado');
+        $inactivo = $this->crearUsuario('Empleado');
+        $inactivo->update(['estado' => 'inactivo']);
+
+        $this->actingAs($administrador)
+            ->get('/panel/usuarios?rol='.$empleado->id_rol)
+            ->assertOk()
+            ->assertSee($empleado->usuario)
+            ->assertDontSee($administrador->usuario);
+
+        $this->actingAs($administrador)
+            ->get('/panel/usuarios?estado=inactivo')
+            ->assertOk()
+            ->assertSee($inactivo->usuario)
+            ->assertDontSee($empleado->usuario);
+    }
+
     public function test_cuenta_inactiva_no_puede_iniciar_sesion(): void
     {
         $cuenta = $this->crearUsuario('Empleado');

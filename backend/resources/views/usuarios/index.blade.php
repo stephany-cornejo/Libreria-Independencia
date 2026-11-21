@@ -25,11 +25,32 @@
                 maxlength="100"
             >
         </div>
+        <div class="campo-filtro">
+            <label for="rol">Rol</label>
+            <select id="rol" name="rol">
+                <option value="">Todos los roles</option>
+                @foreach ($roles as $rolOpcion)
+                    <option
+                        value="{{ $rolOpcion->id_rol }}"
+                        {{ (int) $filtros['rol'] === (int) $rolOpcion->id_rol ? 'selected' : '' }}
+                    >{{ $rolOpcion->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
 
+        <div class="campo-filtro">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado">
+                <option value="">Cualquier estado</option>
+                <option value="activo" {{ $filtros['estado'] === 'activo' ? 'selected' : '' }}>Activo</option>
+                <option value="inactivo" {{ $filtros['estado'] === 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+            </select>
+        </div>
+        
         <div class="filtros-acciones">
             <button type="submit" class="boton">Buscar</button>
 
-            @if ($filtros['q'] !== '')
+            @if ($filtros['q'] !== '' || $filtros['rol'] !== null || $filtros['estado'] !== null)
                 <a href="{{ route('usuarios.index') }}" class="boton boton-secundario">Limpiar</a>
             @endif
         </div>

@@ -21,6 +21,14 @@ class UsuarioController extends Controller
     {
         $texto = trim((string) $request->query('q', ''));
 
+        $rol = is_numeric($request->query('rol'))
+            ? (int) $request->query('rol')
+            : null;
+
+        $estado = in_array($request->query('estado'), ['activo', 'inactivo'], true)
+            ? $request->query('estado')
+            : null;
+
         $usuarios = User::query()
             ->with('rol:id_rol,nombre')
             ->withCount('movimientos')
@@ -31,13 +39,20 @@ class UsuarioController extends Controller
                         ->orWhere('usuario', 'like', "%{$escapado}%");
                 });
             })
+            ->when($rol !== null, fn ($query) => $query->where('id_rol', $rol))
+            ->when($estado !== null, fn ($query) => $query->where('estado', $estado))
             ->orderBy('nombre')
             ->paginate(15)
             ->withQueryString();
 
         return view('usuarios.index', [
             'usuarios' => $usuarios,
-            'filtros' => ['q' => $texto],
+            'roles' => Rol::orderBy('nombre')->get(),
+            'filtros' => [
+                'q' => $texto,
+                'rol' => $rol,
+                'estado' => $estado,
+            ],
         ]);
     }
 
