@@ -69,4 +69,25 @@ Route::middleware([
         ProveedorApiController::class, 'show'
     ])->name('api.proveedores.show');
 
+
+    // Registrar proveedor
+    Route::post('/proveedores', [
+        ProveedorApiController::class, 'store'
+    ])->name('api.proveedores.store');
+
+    // Editar proveedor
+    Route::put('/proveedores/{proveedor}', [
+        ProveedorApiController::class, 'update'
+    ])->name('api.proveedores.update');
+
+    // Activar o desactivar proveedor
+    Route::patch('/proveedores/{proveedor}/estado', [
+        ProveedorApiController::class, 'updateStatus'
+    ])->name('api.proveedores.estado');
+
+    // Eliminar proveedor
+    Route::delete('/proveedores/{proveedor}', [
+        ProveedorApiController::class, 'destroy'
+    ])->name('api.proveedores.destroy');
+
 });

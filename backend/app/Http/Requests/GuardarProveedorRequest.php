@@ -29,7 +29,8 @@ class GuardarProveedorRequest extends FormRequest
                 Rule::unique('proveedores', 'nombre')
                     ->ignore($proveedor?->id_proveedor, 'id_proveedor'),
             ],
-            'telefono' => ['nullable', 'string', 'max:20'],
+            
+            'telefono' => ['nullable','string','max:20','regex:/^(?=(?:\D*\d){7,})\+?[0-9][0-9\s().-]*$/'],
             'email' => ['nullable', 'email', 'max:100'],
             'direccion' => ['nullable', 'string', 'max:150'],
             'estado' => ['required', 'string', Rule::in(['activo', 'inactivo'])],
@@ -49,6 +50,7 @@ class GuardarProveedorRequest extends FormRequest
 
             'email.email' => 'El correo debe ser una dirección válida.',
             'email.max' => 'El correo no puede superar los 100 caracteres.',
+            'telefono.regex' => 'El teléfono debe contener al menos 7 dígitos y un formato válido.',
 
             'direccion.string' => 'La dirección debe ser un texto.',
             'direccion.max' => 'La dirección no puede superar los 150 caracteres.',
