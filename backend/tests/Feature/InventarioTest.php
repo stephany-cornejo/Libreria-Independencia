@@ -418,6 +418,37 @@ class InventarioTest extends TestCase
             ->assertDontSee('Libro con stock holgado');
     }
 
+    public function test_panel_cuenta_solo_libros_activos_en_la_alerta_de_stock(): void
+    {
+        $empleado = $this->crearUsuario();
+
+        $antes = $this->actingAs($empleado)
+            ->get('/panel')
+            ->assertOk()
+            ->viewData('estadisticas');
+
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'descontinuado',
+        ]);
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'activo',
+        ]);
+
+        $despues = $this->actingAs($empleado)
+            ->get('/panel')
+            ->assertOk()
+            ->viewData('estadisticas');
+
+        $this->assertSame($antes[0]['valor'] + 1, $despues[0]['valor']);
+        $this->assertSame($antes[2]['valor'] + 1, $despues[2]['valor']);
+        $this->assertStringContainsString(
+            'disponibilidad=alerta',
+            $despues[2]['enlace']
+        );
+    }
+
     public function test_registrar_libro_con_datos_validos_lo_guarda(): void
     {
         $categoria = $this->crearCategoria();

@@ -39,12 +39,13 @@ class PanelController extends Controller
     }
 
     /**
-     * Métricas reales del sistema. Los contadores se limitan a
-     * campos de agrupación para evitar cargar tablas completas.
+     * Métricas reales del sistema. Los contadores de libros se limitan
+     * a los libros activos (los desactivados no generan alertas) y se
+     * evita cargar tablas completas.
      */
     private function estadisticas(bool $esAdministrador): array
     {
-        $productos = Producto::query();
+        $productos = Producto::query()->where('estado', 'activo');
 
         return [
             [
@@ -52,7 +53,7 @@ class PanelController extends Controller
                 'valor' => (clone $productos)->count(),
                 'icono' => 'libros',
                 'tono' => 'indigo',
-                'enlace' => route('inventario.index'),
+                'enlace' => route('inventario.index', ['estado' => 'activo']),
                 'detalle' => 'Ver inventario completo',
             ],
             [
@@ -62,7 +63,7 @@ class PanelController extends Controller
                     ->count(),
                 'icono' => 'disponible',
                 'tono' => 'esmeralda',
-                'enlace' => route('inventario.index'),
+                'enlace' => route('inventario.index', ['estado' => 'activo']),
                 'detalle' => 'Unidades disponibles',
             ],
             [
@@ -72,7 +73,10 @@ class PanelController extends Controller
                     ->count(),
                 'icono' => 'alerta',
                 'tono' => 'ambar',
-                'enlace' => route('inventario.index'),
+                'enlace' => route('inventario.index', [
+                    'estado' => 'activo',
+                    'disponibilidad' => 'alerta',
+                ]),
                 'detalle' => 'Requieren reposición',
             ],
             [
