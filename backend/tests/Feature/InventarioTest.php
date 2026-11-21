@@ -449,23 +449,24 @@ class InventarioTest extends TestCase
         ]);
     }
 
-    public function test_eliminar_libro_sin_movimientos_lo_elimina(): void
+    public function test_desactivar_libro_cambia_su_estado_y_no_lo_elimina(): void
     {
         $producto = $this->crearLibro();
         $empleado = $this->crearUsuario();
 
         $this->actingAs($empleado)
-            ->delete(route('inventario.eliminar', $producto))
+            ->patch(route('inventario.desactivar', $producto))
             ->assertRedirect(route('inventario.index'));
 
         $this->assertNotNull(session('exito'));
 
-        $this->assertDatabaseMissing('productos', [
+        $this->assertDatabaseHas('productos', [
             'id_producto' => $producto->id_producto,
+            'estado' => 'descontinuado',
         ]);
     }
 
-    public function test_no_se_puede_eliminar_libro_con_movimientos_registrados(): void
+    public function test_desactivar_libro_con_movimientos_conserva_el_historial(): void
     {
         $producto = $this->crearLibro();
         $empleado = $this->crearUsuario();
@@ -481,16 +482,49 @@ class InventarioTest extends TestCase
         ]);
 
         $this->actingAs($empleado)
-            ->delete(route('inventario.eliminar', $producto))
-            ->assertRedirect();
-
-        $this->assertSame(
-            'No se puede eliminar: el libro tiene movimientos de inventario registrados.',
-            session('error')
-        );
+            ->patch(route('inventario.desactivar', $producto))
+            ->assertRedirect(route('inventario.index'));
 
         $this->assertDatabaseHas('productos', [
             'id_producto' => $producto->id_producto,
+            'estado' => 'descontinuado',
         ]);
+
+        $this->assertDatabaseHas('movimientos', [
+            'id_producto' => $producto->id_producto,
+        ]);
+    }
+
+    public function test_reactivar_libro_lo_vuelve_a_dejar_activo(): void
+    {
+        $producto = $this->crearLibro(['estado' => 'descontinuado']);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->patch(route('inventario.reactivar', $producto))
+            ->assertRedirect(route('inventario.index'));
+
+        $this->assertNotNull(session('exito'));
+
+        $this->assertDatabaseHas('productos', [
+            'id_producto' => $producto->id_producto,
+            'estado' => 'activo',
+        ]);
+    }
+
+    public function test_indice_muestra_libro_desactivado_con_opcion_de_reactivar(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro fuera de catálogo',
+            'estado' => 'descontinuado',
+        ]);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario')
+            ->assertOk()
+            ->assertSee('Libro fuera de catálogo')
+            ->assertSee('Desactivado')
+            ->assertSee('Reactivar');
     }
 }

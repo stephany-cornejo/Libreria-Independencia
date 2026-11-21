@@ -7,7 +7,6 @@ use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -149,31 +148,29 @@ class InventarioController extends Controller
             ->with('exito', 'Libro actualizado correctamente.');
     }
 
-    /**
-     * Elimina un libro. La base de datos impide borrar títulos con
-     * movimientos registrados (integridad referencial): en ese caso
-     * se devuelve un aviso claro en lugar de un error técnico.
+        /**
+     * Desactiva un libro (estado "descontinuado"). No se borra: conserva
+     * su historial de movimientos y deja de aceptar nuevos movimientos.
      */
-    public function eliminar(Producto $producto): RedirectResponse
+    public function desactivar(Producto $producto): RedirectResponse
     {
-        try {
-            $producto->delete();
-        } catch (QueryException $exception) {
-            $esRestriccionDeClaveForanea = ($exception->errorInfo[1] ?? null) === 1451;
-
-            if (! $esRestriccionDeClaveForanea) {
-                throw $exception;
-            }
-
-            return back()->with(
-                'error',
-                'No se puede eliminar: el libro tiene movimientos de inventario registrados.'
-            );
-        }
+        $producto->update(['estado' => 'descontinuado']);
 
         return redirect()
             ->route('inventario.index')
-            ->with('exito', 'Libro eliminado correctamente.');
+            ->with('exito', 'Libro desactivado correctamente.');
+    }
+
+    /**
+     * Vuelve a activar un libro desactivado.
+     */
+    public function reactivar(Producto $producto): RedirectResponse
+    {
+        $producto->update(['estado' => 'activo']);
+
+        return redirect()
+            ->route('inventario.index')
+            ->with('exito', 'Libro reactivado correctamente.');
     }
 
     /**

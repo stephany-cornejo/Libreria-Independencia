@@ -190,7 +190,11 @@
                             <td>
                                 <div class="stock-celda">
                                     <span class="stock-numero">{{ $producto->cantidad_disponible }} unid.</span>
-                                    <span class="insignia {{ $estado[1] }}">{{ $estado[0] }}</span>
+                                    @if ($producto->estado === 'activo')
+                                        <span class="insignia {{ $estado[1] }}">{{ $estado[0] }}</span>
+                                    @else
+                                        <span class="insignia insignia-inactivo">Desactivado</span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="acciones">
@@ -199,12 +203,20 @@
                                     class="boton boton-secundario boton-mini"
                                 >Editar</a>
 
-                                <button
-                                    type="button"
-                                    class="boton boton-peligro-tenue boton-mini"
-                                    data-eliminar="{{ $producto->nombre }}"
-                                    data-url="{{ route('inventario.eliminar', $producto) }}"
-                                >Eliminar</button>
+                                @if ($producto->estado === 'activo')
+                                    <button
+                                        type="button"
+                                        class="boton boton-peligro-tenue boton-mini"
+                                        data-desactivar="{{ $producto->nombre }}"
+                                        data-url="{{ route('inventario.desactivar', $producto) }}"
+                                    >Desactivar</button>
+                                @else
+                                    <form method="POST" action="{{ route('inventario.reactivar', $producto) }}" style="display:inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="boton boton-secundario boton-mini">Reactivar</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -215,41 +227,41 @@
         {{ $productos->links('paginacion.simple') }}
     @endif
 
-    {{-- Confirmación de eliminación --}}
-    <dialog class="dialogo" id="dialogo-eliminar">
+    {{-- Confirmación de desactivación --}}
+    <dialog class="dialogo" id="dialogo-desactivar">
         <div class="dialogo-cuerpo">
-            <h2>Eliminar libro</h2>
+            <h2>Desactivar libro</h2>
             <p>
-                ¿Seguro que deseas eliminar <strong id="nombre-eliminar"></strong>?
-                Esta acción no se puede deshacer.
+                ¿Seguro que deseas desactivar <strong id="nombre-desactivar"></strong>?
+                Se conserva su historial y podrás reactivarlo cuando quieras.
             </p>
         </div>
 
         <div class="dialogo-acciones">
-            <button type="button" class="boton boton-secundario" id="cancelar-eliminar">
+            <button type="button" class="boton boton-secundario" id="cancelar-desactivar">
                 Cancelar
             </button>
 
-            <form method="POST" id="form-eliminar" action="">
+            <form method="POST" id="form-desactivar" action="">
                 @csrf
-                @method('DELETE')
-                <button type="submit" class="boton boton-peligro">Eliminar</button>
+                @method('PATCH')
+                <button type="submit" class="boton boton-peligro">Desactivar</button>
             </form>
         </div>
     </dialog>
 
     <script>
-        const dialogo = document.getElementById('dialogo-eliminar');
+        const dialogo = document.getElementById('dialogo-desactivar');
 
-        document.querySelectorAll('[data-eliminar]').forEach((boton) => {
+        document.querySelectorAll('[data-desactivar]').forEach((boton) => {
             boton.addEventListener('click', () => {
-                document.getElementById('nombre-eliminar').textContent = boton.dataset.eliminar;
-                document.getElementById('form-eliminar').action = boton.dataset.url;
+                document.getElementById('nombre-desactivar').textContent = boton.dataset.desactivar;
+                document.getElementById('form-desactivar').action = boton.dataset.url;
                 dialogo.showModal();
             });
         });
 
-        document.getElementById('cancelar-eliminar')
+        document.getElementById('cancelar-desactivar')
             .addEventListener('click', () => dialogo.close());
 
         dialogo.addEventListener('click', (evento) => {
