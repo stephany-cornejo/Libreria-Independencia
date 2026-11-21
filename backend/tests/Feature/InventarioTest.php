@@ -298,6 +298,71 @@ class InventarioTest extends TestCase
             ->assertDontSee('Libro retirado del catalogo');
     }
 
+    public function test_visitante_es_redirigido_al_login_desde_el_detalle(): void
+    {
+        $producto = $this->crearLibro();
+
+        $this->get(route('inventario.ver', $producto))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_detalle_muestra_datos_categoria_y_proveedor(): void
+    {
+        $proveedor = Proveedor::create([
+            'nombre' => 'Distribuidora del detalle',
+            'estado' => 'activo',
+        ]);
+        $producto = $this->crearLibro([
+            'nombre' => 'Libro del detalle',
+            'autor' => 'Autora del detalle',
+            'editorial' => 'Editorial del detalle',
+            'id_proveedor' => $proveedor->id_proveedor,
+        ]);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get(route('inventario.ver', $producto))
+            ->assertOk()
+            ->assertSee('Libro del detalle')
+            ->assertSee($producto->codigo)
+            ->assertSee('Autora del detalle')
+            ->assertSee('Editorial del detalle')
+            ->assertSee('Narrativa')
+            ->assertSee('Distribuidora del detalle');
+    }
+
+    public function test_detalle_muestra_los_ultimos_movimientos_del_libro(): void
+    {
+        $producto = $this->crearLibro();
+        $empleado = $this->crearUsuario();
+
+        Movimiento::create([
+            'tipo' => 'entrada',
+            'motivo' => 'compra',
+            'id_producto' => $producto->id_producto,
+            'id_usuario' => $empleado->id_usuario,
+            'cantidad' => 8,
+            'existencia_resultante' => 8,
+            'fecha' => now(),
+            'observaciones' => 'Pedido de reposicion de prueba',
+        ]);
+
+        $this->actingAs($empleado)
+            ->get(route('inventario.ver', $producto))
+            ->assertOk()
+            ->assertSee('Últimos movimientos')
+            ->assertSee('Pedido de reposicion de prueba');
+    }
+
+    public function test_detalle_de_libro_inexistente_devuelve_404(): void
+    {
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario/999999')
+            ->assertNotFound();
+    }
+
     public function test_registrar_libro_con_datos_validos_lo_guarda(): void
     {
         $categoria = $this->crearCategoria();

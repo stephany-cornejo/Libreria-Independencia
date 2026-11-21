@@ -49,6 +49,10 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
     Route::get('/panel/inventario/{producto}/editar', [InventarioController::class, 'editar'])
         ->name('inventario.editar');
 
+    Route::get('/panel/inventario/{producto}', [InventarioController::class, 'ver'])
+        ->whereNumber('producto')
+        ->name('inventario.ver');
+
     Route::put('/panel/inventario/{producto}', [InventarioController::class, 'actualizar'])
         ->name('inventario.actualizar');
 

@@ -206,7 +206,7 @@
                         @php($estado = $etiquetasStock[$producto->estadoStock()])
                         <tr>
                             <td>
-                                <span class="libro-titulo">{{ $producto->nombre }}</span>
+                                <a href="{{ route('inventario.ver', $producto) }}" class="libro-titulo">{{ $producto->nombre }}</a>
                                 <span class="libro-codigo">{{ $producto->codigo }}</span>
                             </td>
                             <td>{{ $producto->autor ?? '—' }}</td>

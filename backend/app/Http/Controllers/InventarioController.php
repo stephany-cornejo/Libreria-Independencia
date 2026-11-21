@@ -166,6 +166,25 @@ class InventarioController extends Controller
     }
 
     /**
+     * Detalle de un libro: datos generales, categoría, proveedor,
+     * estado de existencias y sus últimos movimientos.
+     */
+    public function ver(Producto $producto): View
+    {
+        $producto->load(['categoria', 'proveedor']);
+
+        return view('inventario.ver', [
+            'producto' => $producto,
+            'movimientos' => $producto->movimientos()
+                ->with('usuario:id_usuario,nombre')
+                ->orderByDesc('fecha')
+                ->orderByDesc('id_movimiento')
+                ->limit(10)
+                ->get(),
+        ]);
+    }
+
+    /**
      * Desactiva un libro (estado "descontinuado"). No se borra: conserva
      * su historial de movimientos y deja de aceptar nuevos movimientos.
      */
