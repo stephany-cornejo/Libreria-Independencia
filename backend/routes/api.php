@@ -21,7 +21,7 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
         ->name('api.configuracion');
 });
 
-// Category API routes - Integrante 2
+
 Route::middleware([
     'web',
     'auth',
@@ -29,12 +29,34 @@ Route::middleware([
     'rol:Administrador',
 ])->group(function () {
 
+    // Consultar todas las categorías
     Route::get('/categorias', [
         CategoriaApiController::class, 'index'
     ])->name('api.categorias.index');
 
+    // Consultar una categoría
     Route::get('/categorias/{categoria}', [
         CategoriaApiController::class, 'show'
     ])->name('api.categorias.show');
+
+    // Registrar una categoría
+    Route::post('/categorias', [
+        CategoriaApiController::class, 'store'
+    ])->name('api.categorias.store');
+
+    // Editar una categoría
+    Route::put('/categorias/{categoria}', [
+        CategoriaApiController::class, 'update'
+    ])->name('api.categorias.update');
+
+    // Activar o desactivar una categoría
+    Route::patch('/categorias/{categoria}/estado', [
+        CategoriaApiController::class, 'updateStatus'
+    ])->name('api.categorias.estado');
+
+    // Eliminar una categoría
+    Route::delete('/categorias/{categoria}', [
+        CategoriaApiController::class, 'destroy'
+    ])->name('api.categorias.destroy');
 
 });
