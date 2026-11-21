@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\EstadoController;
 use App\Http\Controllers\Api\SesionController;
 use App\Http\Controllers\Api\CategoriaApiController;
+use App\Http\Controllers\Api\ProveedorApiController;
 use Illuminate\Support\Facades\Route;
 
 // Existing project routes
@@ -58,5 +59,14 @@ Route::middleware([
     Route::delete('/categorias/{categoria}', [
         CategoriaApiController::class, 'destroy'
     ])->name('api.categorias.destroy');
+
+    // Consultar proveedores
+    Route::get('/proveedores', [
+        ProveedorApiController::class, 'index'
+    ])->name('api.proveedores.index');
+
+    Route::get('/proveedores/{proveedor}', [
+        ProveedorApiController::class, 'show'
+    ])->name('api.proveedores.show');
 
 });
