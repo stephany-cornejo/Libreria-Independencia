@@ -49,11 +49,18 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
     Route::get('/panel/inventario/{producto}/editar', [InventarioController::class, 'editar'])
         ->name('inventario.editar');
 
+    Route::get('/panel/inventario/{producto}', [InventarioController::class, 'ver'])
+        ->whereNumber('producto')
+        ->name('inventario.ver');
+
     Route::put('/panel/inventario/{producto}', [InventarioController::class, 'actualizar'])
         ->name('inventario.actualizar');
 
-    Route::delete('/panel/inventario/{producto}', [InventarioController::class, 'eliminar'])
-        ->name('inventario.eliminar');
+    Route::patch('/panel/inventario/{producto}/desactivar', [InventarioController::class, 'desactivar'])
+        ->name('inventario.desactivar');
+
+    Route::patch('/panel/inventario/{producto}/reactivar', [InventarioController::class, 'reactivar'])
+        ->name('inventario.reactivar');
 
     Route::get('/panel/movimientos', [MovimientoController::class, 'index'])
         ->name('movimientos.index');

@@ -83,6 +83,14 @@
         </div>
     </section>
 
+    @php
+        $hayFiltros = $filtros['q'] !== ''
+            || $filtros['categoria'] !== null
+            || $filtros['proveedor'] !== null
+            || $filtros['estado'] !== null
+            || $filtros['disponibilidad'] !== null;
+    @endphp
+
     {{-- Búsqueda y filtros --}}
     <form class="filtros" method="GET" action="{{ route('inventario.index') }}">
         <div class="campo-filtro campo-busqueda">
@@ -92,7 +100,7 @@
                 type="text"
                 name="q"
                 value="{{ $filtros['q'] }}"
-                placeholder="Título o autor…"
+                placeholder="Título, autor, código o ISBN…"
                 maxlength="100"
             >
         </div>
@@ -111,19 +119,42 @@
         </div>
 
         <div class="campo-filtro">
+            <label for="proveedor">Proveedor</label>
+            <select id="proveedor" name="proveedor">
+                <option value="">Todos los proveedores</option>
+                @foreach ($proveedores as $proveedor)
+                    <option
+                        value="{{ $proveedor->id_proveedor }}"
+                        {{ (int) $filtros['proveedor'] === (int) $proveedor->id_proveedor ? 'selected' : '' }}
+                    >{{ $proveedor->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="campo-filtro">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado">
+                <option value="">Activos y desactivados</option>
+                <option value="activo" {{ $filtros['estado'] === 'activo' ? 'selected' : '' }}>Solo activos</option>
+                <option value="desactivado" {{ $filtros['estado'] === 'desactivado' ? 'selected' : '' }}>Solo desactivados</option>
+            </select>
+        </div>
+
+        <div class="campo-filtro">
             <label for="disponibilidad">Disponibilidad</label>
             <select id="disponibilidad" name="disponibilidad">
                 <option value="">Cualquier estado</option>
                 <option value="disponible" {{ $filtros['disponibilidad'] === 'disponible' ? 'selected' : '' }}>Disponible</option>
                 <option value="bajo" {{ $filtros['disponibilidad'] === 'bajo' ? 'selected' : '' }}>Stock bajo</option>
                 <option value="agotado" {{ $filtros['disponibilidad'] === 'agotado' ? 'selected' : '' }}>Agotado</option>
+                                <option value="alerta" {{ $filtros['disponibilidad'] === 'alerta' ? 'selected' : '' }}>Requieren reposición (bajo o agotado)</option>
             </select>
         </div>
 
         <div class="filtros-acciones">
             <button type="submit" class="boton">Buscar</button>
 
-            @if ($filtros['q'] !== '' || $filtros['categoria'] !== null || $filtros['disponibilidad'] !== null)
+            @if ($hayFiltros)
                 <a href="{{ route('inventario.index') }}" class="boton boton-secundario">Limpiar</a>
             @endif
         </div>
@@ -135,9 +166,6 @@
             'bajo' => ['Stock bajo', 'insignia-bajo'],
             'agotado' => ['Agotado', 'insignia-agotado'],
         ];
-        $hayFiltros = $filtros['q'] !== ''
-            || $filtros['categoria'] !== null
-            || $filtros['disponibilidad'] !== null;
     @endphp
 
     @if ($productos->count() === 0)
@@ -179,7 +207,7 @@
                         @php($estado = $etiquetasStock[$producto->estadoStock()])
                         <tr>
                             <td>
-                                <span class="libro-titulo">{{ $producto->nombre }}</span>
+                                <a href="{{ route('inventario.ver', $producto) }}" class="libro-titulo">{{ $producto->nombre }}</a>
                                 <span class="libro-codigo">{{ $producto->codigo }}</span>
                             </td>
                             <td>{{ $producto->autor ?? '—' }}</td>
@@ -190,7 +218,11 @@
                             <td>
                                 <div class="stock-celda">
                                     <span class="stock-numero">{{ $producto->cantidad_disponible }} unid.</span>
-                                    <span class="insignia {{ $estado[1] }}">{{ $estado[0] }}</span>
+                                    @if ($producto->estado === 'activo')
+                                        <span class="insignia {{ $estado[1] }}">{{ $estado[0] }}</span>
+                                    @else
+                                        <span class="insignia insignia-inactivo">Desactivado</span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="acciones">
@@ -199,12 +231,20 @@
                                     class="boton boton-secundario boton-mini"
                                 >Editar</a>
 
-                                <button
-                                    type="button"
-                                    class="boton boton-peligro-tenue boton-mini"
-                                    data-eliminar="{{ $producto->nombre }}"
-                                    data-url="{{ route('inventario.eliminar', $producto) }}"
-                                >Eliminar</button>
+                                @if ($producto->estado === 'activo')
+                                    <button
+                                        type="button"
+                                        class="boton boton-peligro-tenue boton-mini"
+                                        data-desactivar="{{ $producto->nombre }}"
+                                        data-url="{{ route('inventario.desactivar', $producto) }}"
+                                    >Desactivar</button>
+                                @else
+                                    <form method="POST" action="{{ route('inventario.reactivar', $producto) }}" style="display:inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="boton boton-secundario boton-mini">Reactivar</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -215,41 +255,41 @@
         {{ $productos->links('paginacion.simple') }}
     @endif
 
-    {{-- Confirmación de eliminación --}}
-    <dialog class="dialogo" id="dialogo-eliminar">
+    {{-- Confirmación de desactivación --}}
+    <dialog class="dialogo" id="dialogo-desactivar">
         <div class="dialogo-cuerpo">
-            <h2>Eliminar libro</h2>
+            <h2>Desactivar libro</h2>
             <p>
-                ¿Seguro que deseas eliminar <strong id="nombre-eliminar"></strong>?
-                Esta acción no se puede deshacer.
+                ¿Seguro que deseas desactivar <strong id="nombre-desactivar"></strong>?
+                Se conserva su historial y podrás reactivarlo cuando quieras.
             </p>
         </div>
 
         <div class="dialogo-acciones">
-            <button type="button" class="boton boton-secundario" id="cancelar-eliminar">
+            <button type="button" class="boton boton-secundario" id="cancelar-desactivar">
                 Cancelar
             </button>
 
-            <form method="POST" id="form-eliminar" action="">
+            <form method="POST" id="form-desactivar" action="">
                 @csrf
-                @method('DELETE')
-                <button type="submit" class="boton boton-peligro">Eliminar</button>
+                @method('PATCH')
+                <button type="submit" class="boton boton-peligro">Desactivar</button>
             </form>
         </div>
     </dialog>
 
     <script>
-        const dialogo = document.getElementById('dialogo-eliminar');
+        const dialogo = document.getElementById('dialogo-desactivar');
 
-        document.querySelectorAll('[data-eliminar]').forEach((boton) => {
+        document.querySelectorAll('[data-desactivar]').forEach((boton) => {
             boton.addEventListener('click', () => {
-                document.getElementById('nombre-eliminar').textContent = boton.dataset.eliminar;
-                document.getElementById('form-eliminar').action = boton.dataset.url;
+                document.getElementById('nombre-desactivar').textContent = boton.dataset.desactivar;
+                document.getElementById('form-desactivar').action = boton.dataset.url;
                 dialogo.showModal();
             });
         });
 
-        document.getElementById('cancelar-eliminar')
+        document.getElementById('cancelar-desactivar')
             .addEventListener('click', () => dialogo.close());
 
         dialogo.addEventListener('click', (evento) => {

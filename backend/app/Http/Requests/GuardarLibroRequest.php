@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Rules\Isbn;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class GuardarLibroRequest extends FormRequest
 {
@@ -15,6 +16,7 @@ class GuardarLibroRequest extends FormRequest
     /**
      * Reglas del formulario de libro. El precio y la cantidad son
      * numéricos y positivos; el ISBN, si se informa, debe ser válido.
+     * El proveedor es opcional, pero si se informa debe existir.
      */
     public function rules(): array
     {
@@ -24,6 +26,7 @@ class GuardarLibroRequest extends FormRequest
             'editorial' => ['nullable', 'string', 'max:100'],
             'isbn' => ['nullable', 'string', 'max:20', new Isbn],
             'id_categoria' => ['required', 'integer', 'exists:categorias,id_categoria'],
+            'id_proveedor' => ['nullable', 'integer', Rule::exists('proveedores', 'id_proveedor')],
             'precio' => ['required', 'numeric', 'min:0.01'],
             'cantidad' => ['required', 'integer', 'min:0'],
         ];
@@ -49,6 +52,9 @@ class GuardarLibroRequest extends FormRequest
             'id_categoria.integer' => 'La categoría seleccionada no es válida.',
             'id_categoria.exists' => 'La categoría seleccionada no existe. Recarga la página e inténtalo de nuevo.',
 
+            'id_proveedor.integer' => 'El proveedor seleccionado no es válido.',
+            'id_proveedor.exists' => 'El proveedor seleccionado no existe. Recarga la página e inténtalo de nuevo.',
+
             'precio.required' => 'El precio es obligatorio.',
             'precio.numeric' => 'El precio debe ser un valor numérico.',
             'precio.min' => 'El precio debe ser un número positivo.',
@@ -67,6 +73,7 @@ class GuardarLibroRequest extends FormRequest
             'editorial' => 'editorial',
             'isbn' => 'ISBN',
             'id_categoria' => 'categoría',
+            'id_proveedor' => 'proveedor',
             'precio' => 'precio',
             'cantidad' => 'cantidad en stock',
         ];

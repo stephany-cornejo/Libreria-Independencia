@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Categoria;
 use App\Models\Movimiento;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -196,6 +197,258 @@ class InventarioTest extends TestCase
             ->assertDontSee('Título agotadísimo');
     }
 
+    public function test_indice_busca_por_codigo_interno(): void
+    {
+        $this->crearLibro([
+            'codigo' => 'LIB-ZZZ111',
+            'nombre' => 'Libro con codigo buscado',
+        ]);
+        $this->crearLibro([
+            'codigo' => 'LIB-AAA222',
+            'nombre' => 'Libro de otro codigo',
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?q=ZZZ111')
+            ->assertOk()
+            ->assertSee('Libro con codigo buscado')
+            ->assertDontSee('Libro de otro codigo');
+    }
+
+    public function test_indice_busca_por_isbn_con_o_sin_guiones(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro con isbn buscado',
+            'isbn' => '978-84-376-0494-7',
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro con isbn distinto',
+            'isbn' => '0-306-40615-2',
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?q=978-84-376')
+            ->assertOk()
+            ->assertSee('Libro con isbn buscado')
+            ->assertDontSee('Libro con isbn distinto');
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?q=9788437604947')
+            ->assertOk()
+            ->assertSee('Libro con isbn buscado')
+            ->assertDontSee('Libro con isbn distinto');
+    }
+
+    public function test_indice_filtra_por_proveedor(): void
+    {
+        $proveedorUno = Proveedor::create([
+            'nombre' => 'Proveedor Uno',
+            'estado' => 'activo',
+        ]);
+        $proveedorDos = Proveedor::create([
+            'nombre' => 'Proveedor Dos',
+            'estado' => 'activo',
+        ]);
+
+        $this->crearLibro([
+            'nombre' => 'Libro del primer proveedor',
+            'id_proveedor' => $proveedorUno->id_proveedor,
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro del segundo proveedor',
+            'id_proveedor' => $proveedorDos->id_proveedor,
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?proveedor='.$proveedorDos->id_proveedor)
+            ->assertOk()
+            ->assertSee('Libro del segundo proveedor')
+            ->assertDontSee('Libro del primer proveedor');
+    }
+
+    public function test_indice_filtra_por_estado_activo_o_desactivado(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro vigente en catalogo',
+            'estado' => 'activo',
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro retirado del catalogo',
+            'estado' => 'descontinuado',
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?estado=desactivado')
+            ->assertOk()
+            ->assertSee('Libro retirado del catalogo')
+            ->assertDontSee('Libro vigente en catalogo');
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?estado=activo')
+            ->assertOk()
+            ->assertSee('Libro vigente en catalogo')
+            ->assertDontSee('Libro retirado del catalogo');
+    }
+
+    public function test_visitante_es_redirigido_al_login_desde_el_detalle(): void
+    {
+        $producto = $this->crearLibro();
+
+        $this->get(route('inventario.ver', $producto))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_detalle_muestra_datos_categoria_y_proveedor(): void
+    {
+        $proveedor = Proveedor::create([
+            'nombre' => 'Distribuidora del detalle',
+            'estado' => 'activo',
+        ]);
+        $producto = $this->crearLibro([
+            'nombre' => 'Libro del detalle',
+            'autor' => 'Autora del detalle',
+            'editorial' => 'Editorial del detalle',
+            'id_proveedor' => $proveedor->id_proveedor,
+        ]);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get(route('inventario.ver', $producto))
+            ->assertOk()
+            ->assertSee('Libro del detalle')
+            ->assertSee($producto->codigo)
+            ->assertSee('Autora del detalle')
+            ->assertSee('Editorial del detalle')
+            ->assertSee('Narrativa')
+            ->assertSee('Distribuidora del detalle');
+    }
+
+    public function test_detalle_muestra_los_ultimos_movimientos_del_libro(): void
+    {
+        $producto = $this->crearLibro();
+        $empleado = $this->crearUsuario();
+
+        Movimiento::create([
+            'tipo' => 'entrada',
+            'motivo' => 'compra',
+            'id_producto' => $producto->id_producto,
+            'id_usuario' => $empleado->id_usuario,
+            'cantidad' => 8,
+            'existencia_resultante' => 8,
+            'fecha' => now(),
+            'observaciones' => 'Pedido de reposicion de prueba',
+        ]);
+
+        $this->actingAs($empleado)
+            ->get(route('inventario.ver', $producto))
+            ->assertOk()
+            ->assertSee('Últimos movimientos')
+            ->assertSee('Pedido de reposicion de prueba');
+    }
+
+    public function test_detalle_de_libro_inexistente_devuelve_404(): void
+    {
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario/999999')
+            ->assertNotFound();
+    }
+
+    public function test_resumen_solo_cuenta_libros_activos(): void
+    {
+        $empleado = $this->crearUsuario();
+
+        $antes = $this->actingAs($empleado)
+            ->get('/panel/inventario')
+            ->assertOk()
+            ->viewData('resumen');
+
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'descontinuado',
+        ]);
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'activo',
+        ]);
+
+        $despues = $this->actingAs($empleado)
+            ->get('/panel/inventario')
+            ->assertOk()
+            ->viewData('resumen');
+
+        $this->assertSame((int) $antes->agotados + 1, (int) $despues->agotados);
+        $this->assertSame((int) $antes->titulos + 1, (int) $despues->titulos);
+    }
+
+    public function test_indice_filtra_por_alerta_de_reposicion(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro agotado urgente',
+            'cantidad_disponible' => 0,
+            'existencia_minima' => 3,
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro con stock justo',
+            'cantidad_disponible' => 2,
+            'existencia_minima' => 3,
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro con stock holgado',
+            'cantidad_disponible' => 20,
+            'existencia_minima' => 3,
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?disponibilidad=alerta')
+            ->assertOk()
+            ->assertSee('Libro agotado urgente')
+            ->assertSee('Libro con stock justo')
+            ->assertDontSee('Libro con stock holgado');
+    }
+
+    public function test_panel_cuenta_solo_libros_activos_en_la_alerta_de_stock(): void
+    {
+        $empleado = $this->crearUsuario();
+
+        $antes = $this->actingAs($empleado)
+            ->get('/panel')
+            ->assertOk()
+            ->viewData('estadisticas');
+
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'descontinuado',
+        ]);
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'activo',
+        ]);
+
+        $despues = $this->actingAs($empleado)
+            ->get('/panel')
+            ->assertOk()
+            ->viewData('estadisticas');
+
+        $this->assertSame($antes[0]['valor'] + 1, $despues[0]['valor']);
+        $this->assertSame($antes[2]['valor'] + 1, $despues[2]['valor']);
+        $this->assertStringContainsString(
+            'disponibilidad=alerta',
+            $despues[2]['enlace']
+        );
+    }
+
     public function test_registrar_libro_con_datos_validos_lo_guarda(): void
     {
         $categoria = $this->crearCategoria();
@@ -219,6 +472,45 @@ class InventarioTest extends TestCase
             'precio_venta' => '14.99',
             'cantidad_disponible' => 12,
         ]);
+    }
+
+    public function test_registrar_libro_con_proveedor_lo_guarda_relacionado(): void
+    {
+        $categoria = $this->crearCategoria();
+        $proveedor = Proveedor::create([
+            'nombre' => 'Distribuidora de prueba',
+            'estado' => 'activo',
+        ]);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->post(
+                route('inventario.guardar'),
+                array_merge($this->datosValidos($categoria), [
+                    'id_proveedor' => $proveedor->id_proveedor,
+                ])
+            )
+            ->assertRedirect(route('inventario.index'));
+
+        $this->assertDatabaseHas('productos', [
+            'nombre' => 'Cien años de soledad',
+            'id_proveedor' => $proveedor->id_proveedor,
+        ]);
+    }
+
+    public function test_proveedor_inexistente_es_rechazado(): void
+    {
+        $categoria = $this->crearCategoria();
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->post(
+                route('inventario.guardar'),
+                array_merge($this->datosValidos($categoria), [
+                    'id_proveedor' => 999999,
+                ])
+            )
+            ->assertSessionHasErrors('id_proveedor');
     }
 
     public function test_precio_no_numerico_muestra_error_en_espanol(): void
@@ -409,23 +701,24 @@ class InventarioTest extends TestCase
         ]);
     }
 
-    public function test_eliminar_libro_sin_movimientos_lo_elimina(): void
+    public function test_desactivar_libro_cambia_su_estado_y_no_lo_elimina(): void
     {
         $producto = $this->crearLibro();
         $empleado = $this->crearUsuario();
 
         $this->actingAs($empleado)
-            ->delete(route('inventario.eliminar', $producto))
+            ->patch(route('inventario.desactivar', $producto))
             ->assertRedirect(route('inventario.index'));
 
         $this->assertNotNull(session('exito'));
 
-        $this->assertDatabaseMissing('productos', [
+        $this->assertDatabaseHas('productos', [
             'id_producto' => $producto->id_producto,
+            'estado' => 'descontinuado',
         ]);
     }
 
-    public function test_no_se_puede_eliminar_libro_con_movimientos_registrados(): void
+    public function test_desactivar_libro_con_movimientos_conserva_el_historial(): void
     {
         $producto = $this->crearLibro();
         $empleado = $this->crearUsuario();
@@ -441,16 +734,49 @@ class InventarioTest extends TestCase
         ]);
 
         $this->actingAs($empleado)
-            ->delete(route('inventario.eliminar', $producto))
-            ->assertRedirect();
-
-        $this->assertSame(
-            'No se puede eliminar: el libro tiene movimientos de inventario registrados.',
-            session('error')
-        );
+            ->patch(route('inventario.desactivar', $producto))
+            ->assertRedirect(route('inventario.index'));
 
         $this->assertDatabaseHas('productos', [
             'id_producto' => $producto->id_producto,
+            'estado' => 'descontinuado',
         ]);
+
+        $this->assertDatabaseHas('movimientos', [
+            'id_producto' => $producto->id_producto,
+        ]);
+    }
+
+    public function test_reactivar_libro_lo_vuelve_a_dejar_activo(): void
+    {
+        $producto = $this->crearLibro(['estado' => 'descontinuado']);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->patch(route('inventario.reactivar', $producto))
+            ->assertRedirect(route('inventario.index'));
+
+        $this->assertNotNull(session('exito'));
+
+        $this->assertDatabaseHas('productos', [
+            'id_producto' => $producto->id_producto,
+            'estado' => 'activo',
+        ]);
+    }
+
+    public function test_indice_muestra_libro_desactivado_con_opcion_de_reactivar(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro fuera de catálogo',
+            'estado' => 'descontinuado',
+        ]);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario')
+            ->assertOk()
+            ->assertSee('Libro fuera de catálogo')
+            ->assertSee('Desactivado')
+            ->assertSee('Reactivar');
     }
 }
