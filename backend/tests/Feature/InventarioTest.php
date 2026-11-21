@@ -390,6 +390,34 @@ class InventarioTest extends TestCase
         $this->assertSame((int) $antes->titulos + 1, (int) $despues->titulos);
     }
 
+    public function test_indice_filtra_por_alerta_de_reposicion(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro agotado urgente',
+            'cantidad_disponible' => 0,
+            'existencia_minima' => 3,
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro con stock justo',
+            'cantidad_disponible' => 2,
+            'existencia_minima' => 3,
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro con stock holgado',
+            'cantidad_disponible' => 20,
+            'existencia_minima' => 3,
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?disponibilidad=alerta')
+            ->assertOk()
+            ->assertSee('Libro agotado urgente')
+            ->assertSee('Libro con stock justo')
+            ->assertDontSee('Libro con stock holgado');
+    }
+
     public function test_registrar_libro_con_datos_validos_lo_guarda(): void
     {
         $categoria = $this->crearCategoria();

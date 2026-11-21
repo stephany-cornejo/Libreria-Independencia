@@ -135,6 +135,8 @@ class Producto extends Model
                 ),
             'disponible' => $query
                 ->whereColumn('cantidad_disponible', '>', 'existencia_minima'),
+                'alerta' => $query
+                ->whereColumn('cantidad_disponible', '<=', 'existencia_minima'),
             default => $query,
         };
     }

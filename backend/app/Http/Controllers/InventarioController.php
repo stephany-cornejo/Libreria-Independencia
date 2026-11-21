@@ -30,7 +30,7 @@ class InventarioController extends Controller
             ? (int) $request->query('proveedor')
             : null;
 
-        $disponibilidades = ['disponible', 'bajo', 'agotado'];
+        $disponibilidades = ['disponible', 'bajo', 'agotado', 'alerta'];
         $disponibilidad = in_array(
             $request->query('disponibilidad'),
             $disponibilidades,
@@ -55,7 +55,7 @@ class InventarioController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Resumen global del inventario, independiente de los filtros.
+        // Resumen global de los libros activos, independiente de los filtros.
         $resumen = DB::table('productos')->where('estado', 'activo')->selectRaw('
                 COUNT(*) AS titulos,
                 COALESCE(SUM(cantidad_disponible), 0) AS unidades,

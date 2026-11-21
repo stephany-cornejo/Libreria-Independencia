@@ -147,6 +147,7 @@
                 <option value="disponible" {{ $filtros['disponibilidad'] === 'disponible' ? 'selected' : '' }}>Disponible</option>
                 <option value="bajo" {{ $filtros['disponibilidad'] === 'bajo' ? 'selected' : '' }}>Stock bajo</option>
                 <option value="agotado" {{ $filtros['disponibilidad'] === 'agotado' ? 'selected' : '' }}>Agotado</option>
+                                <option value="alerta" {{ $filtros['disponibilidad'] === 'alerta' ? 'selected' : '' }}>Requieren reposición (bajo o agotado)</option>
             </select>
         </div>
 
