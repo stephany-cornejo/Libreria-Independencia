@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('titulo', config('app.name'))</title>
     <link rel="stylesheet" href="{{ asset('css/estilos.css') }}">
+    @stack('head')
 </head>
 <body>
     @auth
@@ -39,6 +40,8 @@
                         >Movimientos</a>
 
                         @if (Auth::user()->rol->nombre === 'Administrador')
+                            
+                            
                             <a
                                 href="{{ route('categorias.index') }}"
                                 class="enlace-nav {{ request()->routeIs('categorias.*') ? 'activo' : '' }}"
@@ -48,6 +51,8 @@
                                 href="{{ route('proveedores.index') }}"
                                 class="enlace-nav {{ request()->routeIs('proveedores.*') ? 'activo' : '' }}"
                             >Proveedores</a>
+
+
 
                             <a
                                 href="{{ route('usuarios.index') }}"

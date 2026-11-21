@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\Api\EstadoController;
 use App\Http\Controllers\Api\SesionController;
+use App\Http\Controllers\Api\CategoriaApiController;
+use App\Http\Controllers\Api\ProveedorApiController;
 use Illuminate\Support\Facades\Route;
 
+// Existing project routes
 Route::get('/estado', EstadoController::class)
     ->name('api.estado');
 
@@ -17,4 +20,74 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
         ]);
     })->middleware('rol:Administrador')
         ->name('api.configuracion');
+});
+
+
+Route::middleware([
+    'web',
+    'auth',
+    'cuenta.activa',
+    'rol:Administrador',
+])->group(function () {
+
+    // Consultar todas las categorías
+    Route::get('/categorias', [
+        CategoriaApiController::class, 'index'
+    ])->name('api.categorias.index');
+
+    // Consultar una categoría
+    Route::get('/categorias/{categoria}', [
+        CategoriaApiController::class, 'show'
+    ])->name('api.categorias.show');
+
+    // Registrar una categoría
+    Route::post('/categorias', [
+        CategoriaApiController::class, 'store'
+    ])->name('api.categorias.store');
+
+    // Editar una categoría
+    Route::put('/categorias/{categoria}', [
+        CategoriaApiController::class, 'update'
+    ])->name('api.categorias.update');
+
+    // Activar o desactivar una categoría
+    Route::patch('/categorias/{categoria}/estado', [
+        CategoriaApiController::class, 'updateStatus'
+    ])->name('api.categorias.estado');
+
+    // Eliminar una categoría
+    Route::delete('/categorias/{categoria}', [
+        CategoriaApiController::class, 'destroy'
+    ])->name('api.categorias.destroy');
+
+    // Consultar proveedores
+    Route::get('/proveedores', [
+        ProveedorApiController::class, 'index'
+    ])->name('api.proveedores.index');
+
+    Route::get('/proveedores/{proveedor}', [
+        ProveedorApiController::class, 'show'
+    ])->name('api.proveedores.show');
+
+
+    // Registrar proveedor
+    Route::post('/proveedores', [
+        ProveedorApiController::class, 'store'
+    ])->name('api.proveedores.store');
+
+    // Editar proveedor
+    Route::put('/proveedores/{proveedor}', [
+        ProveedorApiController::class, 'update'
+    ])->name('api.proveedores.update');
+
+    // Activar o desactivar proveedor
+    Route::patch('/proveedores/{proveedor}/estado', [
+        ProveedorApiController::class, 'updateStatus'
+    ])->name('api.proveedores.estado');
+
+    // Eliminar proveedor
+    Route::delete('/proveedores/{proveedor}', [
+        ProveedorApiController::class, 'destroy'
+    ])->name('api.proveedores.destroy');
+
 });

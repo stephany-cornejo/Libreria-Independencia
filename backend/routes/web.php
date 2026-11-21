@@ -66,7 +66,7 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
     // Catálogos: reservados al rol Administrador (según ENTREGA).
     Route::middleware('rol:Administrador')->group(function () {
-        Route::get('/panel/categorias', [CategoriaController::class, 'index'])
+        Route::view('/panel/categorias', 'catalogos.react')
             ->name('categorias.index');
 
         Route::get('/panel/categorias/crear', [CategoriaController::class, 'crear'])
@@ -84,8 +84,8 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
         Route::delete('/panel/categorias/{categoria}', [CategoriaController::class, 'eliminar'])
             ->name('categorias.eliminar');
 
-        Route::get('/panel/proveedores', [ProveedorController::class, 'index'])
-            ->name('proveedores.index');
+        Route::view('/panel/proveedores', 'catalogos.react')
+    ->name('proveedores.index');
 
         Route::get('/panel/proveedores/crear', [ProveedorController::class, 'crear'])
             ->name('proveedores.crear');
@@ -120,5 +120,9 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
         Route::delete('/panel/usuarios/{usuario}', [UsuarioController::class, 'eliminar'])
             ->name('usuarios.eliminar');
+
+        //Página de integración React
+        Route::view('/panel/catalogos', 'catalogos.react')
+            ->name('catalogos.react');
     });
 });
