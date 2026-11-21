@@ -165,6 +165,7 @@ a {
     font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: -0.01em;
+    white-space: nowrap;
     color: var(--color-texto);
     text-decoration: none;
 }
@@ -215,33 +216,41 @@ a {
 .barra-navegacion-interno {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0.7rem 1.5rem;
+    padding: 0.6rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
 }
 
 .barra-grupo {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
 .navegacion-principal {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.navegacion-principal::-webkit-scrollbar {
+    display: none;
 }
 
 .enlace-nav {
     display: inline-block;
-    padding: 0.45rem 0.85rem;
+    padding: 0.45rem 0.7rem;
     border-radius: 0.6rem;
     color: var(--color-secundario);
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     font-weight: 500;
+    white-space: nowrap;
     text-decoration: none;
     transition: background 0.15s ease, color 0.15s ease;
 }
@@ -262,6 +271,14 @@ a {
     align-items: center;
     gap: 0.6rem;
     font-size: 0.9rem;
+    min-width: 0;
+}
+
+.usuario-barra strong {
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .chip-rol {
@@ -803,6 +820,7 @@ label {
     font-size: 0.9rem;
     font-weight: 600;
     line-height: 1.3;
+    white-space: nowrap;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
@@ -1062,9 +1080,115 @@ label {
 }
 
 /* ==========================================================================
-   Paginación
+   Panel: cabecera con saludo, métricas enlazadas y rejilla
    ========================================================================== */
 
+.cabecera-bienvenida {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.panel-avatar-cabecera {
+    width: 58px;
+    height: 58px;
+    margin: 0;
+    font-size: 1.2rem;
+    flex: 0 0 auto;
+}
+
+.cabecera-bienvenida h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 750;
+}
+
+.cabecera-bienvenida .subtitulo {
+    margin: 0.35rem 0 0.5rem;
+}
+
+.cabecera-acciones {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+/* Enlace que envuelve una tarjeta de métrica */
+.resumen-enlace {
+    text-decoration: none;
+    color: inherit;
+}
+
+.resumen-detalle {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--color-primario);
+    font-size: 0.74rem;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+.resumen-enlace:hover .resumen-detalle {
+    opacity: 1;
+}
+
+/* Rejilla de accesos y cuenta */
+.panel-rejilla {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+    margin-top: 1.5rem;
+}
+
+.tarjeta-plena {
+    max-width: none;
+    padding: 1.75rem;
+}
+
+.tarjeta-plena h2 {
+    margin: 0 0 0.15rem;
+    font-size: 1.1rem;
+}
+
+.tarjeta-plena .subtitulo {
+    margin: 0 0 1.25rem;
+}
+
+.panel-acciones-sin-borde {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.panel-accion-flecha {
+    margin-left: auto;
+    color: var(--color-secundario);
+    font-size: 1.05rem;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.panel-accion:hover .panel-accion-flecha {
+    color: var(--color-primario);
+    transform: translateX(3px);
+}
+
+.panel-cuenta {
+    text-align: center;
+}
+
+.panel-cuenta .panel-avatar {
+    margin: 0.25rem auto 1.25rem;
+}
+
+.panel-cuenta .datos-lista {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   Paginación
+   ========================================================================== */
 .paginacion {
     display: flex;
     align-items: center;
@@ -1167,6 +1291,299 @@ dialog.dialogo::backdrop {
 }
 
 /* ==========================================================================
+   Pantalla de acceso (login de dos columnas)
+   ========================================================================== */
+
+.cuerpo-acceso {
+    background:
+        radial-gradient(1100px 500px at 15% -10%, rgba(99, 102, 241, 0.14), transparent 60%),
+        radial-gradient(900px 420px at 95% 0%, rgba(244, 114, 182, 0.10), transparent 55%),
+        var(--color-fondo);
+}
+
+.acceso {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* Panel de marca */
+.acceso-marca {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 3rem 3.5rem;
+    overflow: hidden;
+    background:
+        radial-gradient(700px 380px at 18% 12%, rgba(255, 255, 255, 0.16), transparent 60%),
+        linear-gradient(150deg, #4f46e5 0%, #6d28d9 55%, #7c3aed 100%);
+    color: #fff;
+}
+
+.acceso-marca-decoracion {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.acceso-burbuja {
+    position: absolute;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.acceso-burbuja-1 {
+    width: 260px;
+    height: 260px;
+    top: -70px;
+    right: -60px;
+}
+
+.acceso-burbuja-2 {
+    width: 170px;
+    height: 170px;
+    bottom: 14%;
+    left: -55px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.acceso-burbuja-3 {
+    width: 90px;
+    height: 90px;
+    bottom: 8%;
+    right: 16%;
+    background: rgba(251, 191, 36, 0.22);
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+.acceso-marca-contenido {
+    position: relative;
+    max-width: 30rem;
+}
+
+.acceso-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.5);
+}
+
+.acceso-logo svg {
+    width: 26px;
+    height: 26px;
+}
+
+.acceso-marca-nombre {
+    margin: 1.4rem 0 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.acceso-marca-titulo {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.7rem, 2.6vw, 2.35rem);
+    font-weight: 780;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.acceso-marca-texto {
+    margin: 0;
+    font-size: 0.97rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.acceso-beneficios {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.acceso-beneficios li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.acceso-beneficio-icono {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+.acceso-beneficio-icono svg {
+    width: 14px;
+    height: 14px;
+}
+
+.acceso-marca-pie {
+    position: relative;
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* Zona del formulario */
+.acceso-zona-formulario {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.75rem;
+}
+
+.acceso-formulario {
+    width: 100%;
+    max-width: 25.5rem;
+    background: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 1.25rem;
+    padding: 2.25rem 2.15rem;
+    box-shadow: var(--sombra-alta);
+}
+
+.acceso-cabecera {
+    margin-bottom: 1.6rem;
+}
+
+.acceso-logo-movil {
+    display: none;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1rem;
+}
+
+.acceso-cabecera h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.55rem;
+    font-weight: 760;
+    letter-spacing: -0.02em;
+}
+
+.acceso-cabecera .subtitulo {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Campo con icono interior y botón de visibilidad */
+.campo-con-icono {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.campo-con-icono input {
+    padding-left: 2.65rem;
+    padding-right: 2.75rem;
+}
+
+.campo-icono {
+    position: absolute;
+    left: 0.8rem;
+    display: inline-flex;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.campo-icono svg {
+    width: 17px;
+    height: 17px;
+}
+
+.campo-accion {
+    position: absolute;
+    right: 0.45rem;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.campo-accion:hover {
+    background: var(--color-primario-suave);
+    color: var(--color-primario);
+}
+
+.campo-accion svg {
+    width: 17px;
+    height: 17px;
+}
+
+.campo-accion .icono-ojo-cerrado {
+    display: none;
+}
+
+.campo-accion.activo {
+    color: var(--color-primario);
+}
+
+.campo-accion.activo .icono-ojo {
+    display: none;
+}
+
+.campo-accion.activo .icono-ojo-cerrado {
+    display: block;
+}
+
+.boton-acceso {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.boton-acceso svg {
+    width: 17px;
+    height: 17px;
+}
+
+.acceso-pie {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-borde);
+    text-align: center;
+}
+
+.acceso-pie p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-secundario);
+}
+
+.acceso-pie strong {
+    color: var(--color-texto);
+    font-weight: 650;
+}
+
+/* ==========================================================================
    Adaptación a tablet y escritorio pequeño
    ========================================================================== */
 
@@ -1186,6 +1603,37 @@ dialog.dialogo::backdrop {
 
     .filtros-acciones .boton {
         flex: 1;
+    }
+
+    /* El panel de marca se oculta y el formulario ocupa todo el ancho */
+    .acceso {
+        grid-template-columns: 1fr;
+    }
+
+    .acceso-marca {
+        display: none;
+    }
+
+    .acceso-logo-movil {
+        display: inline-flex;
+    }
+
+    .acceso-zona-formulario {
+        padding: 2rem 1.25rem;
+    }
+
+    /* La navegación se apila en dos filas cómodas */
+    .barra-navegacion-interno {
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
+    }
+
+    .barra-grupo {
+        flex-wrap: wrap;
+    }
+
+    .panel-rejilla {
+        grid-template-columns: 1fr;
     }
 }
 

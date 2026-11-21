@@ -6,6 +6,7 @@ use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -100,5 +101,24 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
         Route::delete('/panel/proveedores/{proveedor}', [ProveedorController::class, 'eliminar'])
             ->name('proveedores.eliminar');
+
+        // Cuentas de acceso: reservadas al rol Administrador.
+        Route::get('/panel/usuarios', [UsuarioController::class, 'index'])
+            ->name('usuarios.index');
+
+        Route::get('/panel/usuarios/crear', [UsuarioController::class, 'crear'])
+            ->name('usuarios.crear');
+
+        Route::post('/panel/usuarios', [UsuarioController::class, 'guardar'])
+            ->name('usuarios.guardar');
+
+        Route::get('/panel/usuarios/{usuario}/editar', [UsuarioController::class, 'editar'])
+            ->name('usuarios.editar');
+
+        Route::put('/panel/usuarios/{usuario}', [UsuarioController::class, 'actualizar'])
+            ->name('usuarios.actualizar');
+
+        Route::delete('/panel/usuarios/{usuario}', [UsuarioController::class, 'eliminar'])
+            ->name('usuarios.eliminar');
     });
 });

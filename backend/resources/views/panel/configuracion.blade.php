@@ -8,6 +8,7 @@
         <p class="subtitulo">Área reservada al rol Administrador.</p>
 
         <div class="enlaces">
+            <a href="{{ route('usuarios.index') }}" class="boton">Gestionar cuentas de usuario</a>
             <a href="{{ route('panel') }}" class="boton boton-secundario">Volver al panel</a>
         </div>
     </div>

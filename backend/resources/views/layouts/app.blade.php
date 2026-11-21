@@ -50,6 +50,11 @@
                             >Proveedores</a>
 
                             <a
+                                href="{{ route('usuarios.index') }}"
+                                class="enlace-nav {{ request()->routeIs('usuarios.*') ? 'activo' : '' }}"
+                            >Usuarios</a>
+
+                            <a
                                 href="{{ route('panel.configuracion') }}"
                                 class="enlace-nav {{ request()->routeIs('panel.configuracion') ? 'activo' : '' }}"
                             >Configuración</a>
