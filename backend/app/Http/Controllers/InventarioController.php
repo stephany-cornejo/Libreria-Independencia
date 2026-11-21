@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GuardarLibroRequest;
 use App\Models\Categoria;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -74,6 +75,7 @@ class InventarioController extends Controller
             'categorias' => Categoria::where('estado', 'activo')
                 ->orderBy('nombre')
                 ->get(),
+            'proveedores' => $this->proveedoresParaFormulario(),
         ]);
     }
 
@@ -93,7 +95,7 @@ class InventarioController extends Controller
             'editorial' => $datos['editorial'] ?? null,
             'isbn' => $datos['isbn'] ?? null,
             'id_categoria' => $datos['id_categoria'],
-            'id_proveedor' => null,
+            'id_proveedor' => $datos['id_proveedor'] ?? null,
             'precio_compra' => 0,
             'precio_venta' => $datos['precio'],
             'cantidad_disponible' => $datos['cantidad'],
@@ -117,6 +119,7 @@ class InventarioController extends Controller
             'categorias' => Categoria::where('estado', 'activo')
                 ->orderBy('nombre')
                 ->get(),
+            'proveedores' => $this->proveedoresParaFormulario($producto->id_proveedor),
         ]);
     }
 
@@ -136,6 +139,7 @@ class InventarioController extends Controller
             'editorial' => $datos['editorial'] ?? null,
             'isbn' => $datos['isbn'] ?? null,
             'id_categoria' => $datos['id_categoria'],
+            'id_proveedor' => $datos['id_proveedor'] ?? null,
             'precio_venta' => $datos['precio'],
             'cantidad_disponible' => $datos['cantidad'],
         ]);
@@ -182,5 +186,19 @@ class InventarioController extends Controller
         } while (Producto::where('codigo', $codigo)->exists());
 
         return $codigo;
+    }
+
+    /**
+     * Proveedores activos para el formulario. En edición se incluye
+     * también el proveedor actual del libro aunque esté inactivo,
+     * para no perder la relación existente.
+     */
+    private function proveedoresParaFormulario(?int $actual = null)
+    {
+        return Proveedor::query()
+            ->where('estado', 'activo')
+            ->when($actual !== null, fn ($query) => $query->orWhere('id_proveedor', $actual))
+            ->orderBy('nombre')
+            ->get(['id_proveedor', 'nombre']);
     }
 }

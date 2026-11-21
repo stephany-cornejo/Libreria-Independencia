@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Categoria;
 use App\Models\Movimiento;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -219,6 +220,45 @@ class InventarioTest extends TestCase
             'precio_venta' => '14.99',
             'cantidad_disponible' => 12,
         ]);
+    }
+
+    public function test_registrar_libro_con_proveedor_lo_guarda_relacionado(): void
+    {
+        $categoria = $this->crearCategoria();
+        $proveedor = Proveedor::create([
+            'nombre' => 'Distribuidora de prueba',
+            'estado' => 'activo',
+        ]);
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->post(
+                route('inventario.guardar'),
+                array_merge($this->datosValidos($categoria), [
+                    'id_proveedor' => $proveedor->id_proveedor,
+                ])
+            )
+            ->assertRedirect(route('inventario.index'));
+
+        $this->assertDatabaseHas('productos', [
+            'nombre' => 'Cien años de soledad',
+            'id_proveedor' => $proveedor->id_proveedor,
+        ]);
+    }
+
+    public function test_proveedor_inexistente_es_rechazado(): void
+    {
+        $categoria = $this->crearCategoria();
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->post(
+                route('inventario.guardar'),
+                array_merge($this->datosValidos($categoria), [
+                    'id_proveedor' => 999999,
+                ])
+            )
+            ->assertSessionHasErrors('id_proveedor');
     }
 
     public function test_precio_no_numerico_muestra_error_en_espanol(): void

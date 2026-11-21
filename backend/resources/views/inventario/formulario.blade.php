@@ -115,6 +115,26 @@
         </div>
 
         <div class="campo">
+            <label for="id_proveedor">Proveedor <span class="etiqueta-ayuda">(opcional)</span></label>
+            <select
+                id="id_proveedor"
+                name="id_proveedor"
+                class="{{ $errors->has('id_proveedor') ? 'con-error' : '' }}"
+            >
+                <option value="">Sin proveedor</option>
+                @foreach ($proveedores as $proveedor)
+                    <option
+                        value="{{ $proveedor->id_proveedor }}"
+                        {{ (string) old('id_proveedor', $producto->id_proveedor ?? '') === (string) $proveedor->id_proveedor ? 'selected' : '' }}
+                    >{{ $proveedor->nombre }}</option>
+                @endforeach
+            </select>
+            @error('id_proveedor')
+                <p class="error-campo">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="campo">
             <label for="precio">Precio <span class="etiqueta-ayuda">(USD)</span></label>
             <input
                 id="precio"
