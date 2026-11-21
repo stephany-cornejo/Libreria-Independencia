@@ -276,7 +276,46 @@ class UsuarioTest extends TestCase
             session('error')
         );
     }
+    public function test_no_se_puede_quitar_el_rol_al_ultimo_administrador_activo(): void
+    {
+        $administrador = $this->crearUsuario('Administrador');
+        $rolAdministrador = $administrador->id_rol;
+        $rolEmpleado = Rol::firstOrCreate(['nombre' => 'Empleado']);
 
+        $this->actingAs($administrador)
+            ->from('/panel/usuarios')
+            ->put("/panel/usuarios/{$administrador->id_usuario}", [
+                'nombre' => $administrador->nombre,
+                'usuario' => $administrador->usuario,
+                'id_rol' => $rolEmpleado->id_rol,
+                'estado' => 'activo',
+                'contrasena' => null,
+            ])
+            ->assertRedirect('/panel/usuarios')
+            ->assertSessionHas('error');
+
+        $this->assertSame($rolAdministrador, $administrador->fresh()->id_rol);
+    }
+
+    public function test_con_dos_administradores_se_puede_cambiar_el_rol_de_uno(): void
+    {
+        $administrador = $this->crearUsuario('Administrador');
+        $otroAdmin = $this->crearUsuario('Administrador');
+        $rolEmpleado = Rol::firstOrCreate(['nombre' => 'Empleado']);
+
+        $this->actingAs($administrador)
+            ->put("/panel/usuarios/{$otroAdmin->id_usuario}", [
+                'nombre' => $otroAdmin->nombre,
+                'usuario' => $otroAdmin->usuario,
+                'id_rol' => $rolEmpleado->id_rol,
+                'estado' => 'activo',
+                'contrasena' => null,
+            ])
+            ->assertRedirect(route('usuarios.index'))
+            ->assertSessionHas('exito');
+
+        $this->assertSame($rolEmpleado->id_rol, $otroAdmin->fresh()->id_rol);
+    }
     public function test_con_dos_administradores_activos_se_puede_desactivar_y_eliminar(): void
     {
         $administrador = $this->crearUsuario('Administrador');

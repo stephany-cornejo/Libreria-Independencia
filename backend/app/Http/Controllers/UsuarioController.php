@@ -95,13 +95,15 @@ class UsuarioController extends Controller
     ): RedirectResponse {
         $datos = $request->validated();
 
-        $desactivaCuenta = $datos['estado'] === 'inactivo'
-            && $usuario->estado === 'activo';
+        $rolNuevo = Rol::find($datos['id_rol']);
 
-        if ($desactivaCuenta && $this->dejariaSinAdministradores($usuario)) {
+        $dejaDeSerAdministradorActivo = $datos['estado'] === 'inactivo'
+            || $rolNuevo?->nombre !== 'Administrador';
+
+        if ($dejaDeSerAdministradorActivo && $this->dejariaSinAdministradores($usuario)) {
             return back()->with(
                 'error',
-                'No se puede desactivar: es el último administrador activo del sistema.'
+                'No se puede desactivar ni cambiar el rol: es el último administrador activo del sistema.'
             )->withInput();
         }
 
