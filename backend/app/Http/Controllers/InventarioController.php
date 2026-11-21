@@ -56,7 +56,7 @@ class InventarioController extends Controller
             ->withQueryString();
 
         // Resumen global del inventario, independiente de los filtros.
-        $resumen = DB::table('productos')->selectRaw('
+        $resumen = DB::table('productos')->where('estado', 'activo')->selectRaw('
                 COUNT(*) AS titulos,
                 COALESCE(SUM(cantidad_disponible), 0) AS unidades,
                 COALESCE(SUM(cantidad_disponible * precio_venta), 0) AS valor,

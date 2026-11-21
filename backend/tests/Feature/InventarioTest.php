@@ -363,6 +363,33 @@ class InventarioTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_resumen_solo_cuenta_libros_activos(): void
+    {
+        $empleado = $this->crearUsuario();
+
+        $antes = $this->actingAs($empleado)
+            ->get('/panel/inventario')
+            ->assertOk()
+            ->viewData('resumen');
+
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'descontinuado',
+        ]);
+        $this->crearLibro([
+            'cantidad_disponible' => 0,
+            'estado' => 'activo',
+        ]);
+
+        $despues = $this->actingAs($empleado)
+            ->get('/panel/inventario')
+            ->assertOk()
+            ->viewData('resumen');
+
+        $this->assertSame((int) $antes->agotados + 1, (int) $despues->agotados);
+        $this->assertSame((int) $antes->titulos + 1, (int) $despues->titulos);
+    }
+
     public function test_registrar_libro_con_datos_validos_lo_guarda(): void
     {
         $categoria = $this->crearCategoria();
