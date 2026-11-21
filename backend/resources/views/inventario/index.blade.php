@@ -83,6 +83,14 @@
         </div>
     </section>
 
+    @php
+        $hayFiltros = $filtros['q'] !== ''
+            || $filtros['categoria'] !== null
+            || $filtros['proveedor'] !== null
+            || $filtros['estado'] !== null
+            || $filtros['disponibilidad'] !== null;
+    @endphp
+
     {{-- Búsqueda y filtros --}}
     <form class="filtros" method="GET" action="{{ route('inventario.index') }}">
         <div class="campo-filtro campo-busqueda">
@@ -92,7 +100,7 @@
                 type="text"
                 name="q"
                 value="{{ $filtros['q'] }}"
-                placeholder="Título o autor…"
+                placeholder="Título, autor, código o ISBN…"
                 maxlength="100"
             >
         </div>
@@ -111,6 +119,28 @@
         </div>
 
         <div class="campo-filtro">
+            <label for="proveedor">Proveedor</label>
+            <select id="proveedor" name="proveedor">
+                <option value="">Todos los proveedores</option>
+                @foreach ($proveedores as $proveedor)
+                    <option
+                        value="{{ $proveedor->id_proveedor }}"
+                        {{ (int) $filtros['proveedor'] === (int) $proveedor->id_proveedor ? 'selected' : '' }}
+                    >{{ $proveedor->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="campo-filtro">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado">
+                <option value="">Activos y desactivados</option>
+                <option value="activo" {{ $filtros['estado'] === 'activo' ? 'selected' : '' }}>Solo activos</option>
+                <option value="desactivado" {{ $filtros['estado'] === 'desactivado' ? 'selected' : '' }}>Solo desactivados</option>
+            </select>
+        </div>
+
+        <div class="campo-filtro">
             <label for="disponibilidad">Disponibilidad</label>
             <select id="disponibilidad" name="disponibilidad">
                 <option value="">Cualquier estado</option>
@@ -123,7 +153,7 @@
         <div class="filtros-acciones">
             <button type="submit" class="boton">Buscar</button>
 
-            @if ($filtros['q'] !== '' || $filtros['categoria'] !== null || $filtros['disponibilidad'] !== null)
+            @if ($hayFiltros)
                 <a href="{{ route('inventario.index') }}" class="boton boton-secundario">Limpiar</a>
             @endif
         </div>
@@ -135,9 +165,6 @@
             'bajo' => ['Stock bajo', 'insignia-bajo'],
             'agotado' => ['Agotado', 'insignia-agotado'],
         ];
-        $hayFiltros = $filtros['q'] !== ''
-            || $filtros['categoria'] !== null
-            || $filtros['disponibilidad'] !== null;
     @endphp
 
     @if ($productos->count() === 0)

@@ -197,6 +197,107 @@ class InventarioTest extends TestCase
             ->assertDontSee('Título agotadísimo');
     }
 
+    public function test_indice_busca_por_codigo_interno(): void
+    {
+        $this->crearLibro([
+            'codigo' => 'LIB-ZZZ111',
+            'nombre' => 'Libro con codigo buscado',
+        ]);
+        $this->crearLibro([
+            'codigo' => 'LIB-AAA222',
+            'nombre' => 'Libro de otro codigo',
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?q=ZZZ111')
+            ->assertOk()
+            ->assertSee('Libro con codigo buscado')
+            ->assertDontSee('Libro de otro codigo');
+    }
+
+    public function test_indice_busca_por_isbn_con_o_sin_guiones(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro con isbn buscado',
+            'isbn' => '978-84-376-0494-7',
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro con isbn distinto',
+            'isbn' => '0-306-40615-2',
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?q=978-84-376')
+            ->assertOk()
+            ->assertSee('Libro con isbn buscado')
+            ->assertDontSee('Libro con isbn distinto');
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?q=9788437604947')
+            ->assertOk()
+            ->assertSee('Libro con isbn buscado')
+            ->assertDontSee('Libro con isbn distinto');
+    }
+
+    public function test_indice_filtra_por_proveedor(): void
+    {
+        $proveedorUno = Proveedor::create([
+            'nombre' => 'Proveedor Uno',
+            'estado' => 'activo',
+        ]);
+        $proveedorDos = Proveedor::create([
+            'nombre' => 'Proveedor Dos',
+            'estado' => 'activo',
+        ]);
+
+        $this->crearLibro([
+            'nombre' => 'Libro del primer proveedor',
+            'id_proveedor' => $proveedorUno->id_proveedor,
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro del segundo proveedor',
+            'id_proveedor' => $proveedorDos->id_proveedor,
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?proveedor='.$proveedorDos->id_proveedor)
+            ->assertOk()
+            ->assertSee('Libro del segundo proveedor')
+            ->assertDontSee('Libro del primer proveedor');
+    }
+
+    public function test_indice_filtra_por_estado_activo_o_desactivado(): void
+    {
+        $this->crearLibro([
+            'nombre' => 'Libro vigente en catalogo',
+            'estado' => 'activo',
+        ]);
+        $this->crearLibro([
+            'nombre' => 'Libro retirado del catalogo',
+            'estado' => 'descontinuado',
+        ]);
+
+        $empleado = $this->crearUsuario();
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?estado=desactivado')
+            ->assertOk()
+            ->assertSee('Libro retirado del catalogo')
+            ->assertDontSee('Libro vigente en catalogo');
+
+        $this->actingAs($empleado)
+            ->get('/panel/inventario?estado=activo')
+            ->assertOk()
+            ->assertSee('Libro vigente en catalogo')
+            ->assertDontSee('Libro retirado del catalogo');
+    }
+
     public function test_registrar_libro_con_datos_validos_lo_guarda(): void
     {
         $categoria = $this->crearCategoria();

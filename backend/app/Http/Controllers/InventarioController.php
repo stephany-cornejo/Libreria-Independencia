@@ -15,15 +15,19 @@ use Illuminate\Support\Str;
 class InventarioController extends Controller
 {
     /**
-     * Listado del inventario con búsqueda por título/autor, filtro
-     * por categoría y disponibilidad, más el resumen de existencias
-     * (títulos, unidades, valor y alertas de stock).
+     * Listado del inventario con búsqueda por título, autor, código o
+     * ISBN, filtros por categoría, proveedor, estado y disponibilidad,
+     * más el resumen de existencias (títulos, unidades, valor y alertas
+     * de stock).
      */
     public function index(Request $request): View
     {
         $texto = trim((string) $request->query('q', ''));
         $categoria = is_numeric($request->query('categoria'))
             ? (int) $request->query('categoria')
+            : null;
+        $proveedor = is_numeric($request->query('proveedor'))
+            ? (int) $request->query('proveedor')
             : null;
 
         $disponibilidades = ['disponible', 'bajo', 'agotado'];
@@ -33,10 +37,19 @@ class InventarioController extends Controller
             true
         ) ? $request->query('disponibilidad') : null;
 
+        $estados = ['activo', 'desactivado'];
+        $estado = in_array(
+            $request->query('estado'),
+            $estados,
+            true
+        ) ? $request->query('estado') : null;
+
         $productos = Producto::query()
             ->with('categoria:id_categoria,nombre')
             ->when($texto !== '', fn ($query) => $query->texto($texto))
             ->when($categoria !== null, fn ($query) => $query->where('id_categoria', $categoria))
+            ->when($proveedor !== null, fn ($query) => $query->where('id_proveedor', $proveedor))
+            ->when($estado !== null, fn ($query) => $query->estado($estado))
             ->when($disponibilidad !== null, fn ($query) => $query->disponibilidad($disponibilidad))
             ->orderBy('nombre')
             ->paginate(15)
@@ -56,10 +69,14 @@ class InventarioController extends Controller
             'categorias' => Categoria::where('estado', 'activo')
                 ->orderBy('nombre')
                 ->get(),
+            'proveedores' => Proveedor::orderBy('nombre')
+                ->get(['id_proveedor', 'nombre']),
             'resumen' => $resumen,
             'filtros' => [
                 'q' => $texto,
                 'categoria' => $categoria,
+                'proveedor' => $proveedor,
+                'estado' => $estado,
                 'disponibilidad' => $disponibilidad,
             ],
         ]);
@@ -148,7 +165,7 @@ class InventarioController extends Controller
             ->with('exito', 'Libro actualizado correctamente.');
     }
 
-        /**
+    /**
      * Desactiva un libro (estado "descontinuado"). No se borra: conserva
      * su historial de movimientos y deja de aceptar nuevos movimientos.
      */

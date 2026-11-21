@@ -72,7 +72,7 @@ class Producto extends Model
 
     /**
      * Estado de existencias del libro para las alertas del inventario:
-     * 'agotado' (0 unidades), 'bajo' (até o por debajo del mínimo)
+     * 'agotado' (0 unidades), 'bajo' (hasta el mínimo o por debajo)
      * o 'disponible' (por encima del mínimo).
      */
     public function estadoStock(): string
@@ -89,16 +89,30 @@ class Producto extends Model
     }
 
     /**
-     * Filtra por texto libre en título o autor (coincidencia parcial,
-     * escapando los comodines % y _ de SQL LIKE).
+     * Filtra por texto libre en título, autor, código interno o ISBN
+     * (coincidencia parcial, escapando los comodines % y _ de SQL LIKE).
+     * El ISBN también se compara sin guiones ni espacios.
      */
     public function scopeTexto(Builder $query, string $texto): Builder
     {
         $escapado = addcslashes($texto, '%_\\');
+        $sinSeparadores = addcslashes(
+            str_replace(['-', ' '], '', $texto),
+            '%_\\'
+        );
 
-        return $query->where(function (Builder $sub) use ($escapado): void {
+        return $query->where(function (Builder $sub) use ($escapado, $sinSeparadores): void {
             $sub->where('nombre', 'like', "%{$escapado}%")
-                ->orWhere('autor', 'like', "%{$escapado}%");
+                ->orWhere('autor', 'like', "%{$escapado}%")
+                ->orWhere('codigo', 'like', "%{$escapado}%")
+                ->orWhere('isbn', 'like', "%{$escapado}%");
+
+            if ($sinSeparadores !== '') {
+                $sub->orWhereRaw(
+                    "REPLACE(REPLACE(isbn, '-', ''), ' ', '') like ?",
+                    ["%{$sinSeparadores}%"]
+                );
+            }
         });
     }
 
@@ -121,6 +135,19 @@ class Producto extends Model
                 ),
             'disponible' => $query
                 ->whereColumn('cantidad_disponible', '>', 'existencia_minima'),
+            default => $query,
+        };
+    }
+
+    /**
+     * Filtra por estado del libro: 'activo' o 'desactivado'
+     * (en la base de datos, 'descontinuado').
+     */
+    public function scopeEstado(Builder $query, string $estado): Builder
+    {
+        return match ($estado) {
+            'activo' => $query->where('estado', 'activo'),
+            'desactivado' => $query->where('estado', 'descontinuado'),
             default => $query,
         };
     }
