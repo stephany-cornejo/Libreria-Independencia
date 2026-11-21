@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import DetalleCategoria from './DetalleCategoria';
+import FormularioCategoria from './FormularioCategoria';
 
 const resultadoInicial = {
     data: [],
@@ -27,6 +28,14 @@ export default function CategoriasListado() {
 
     // Categoría seleccionada para consultar su detalle
     const [idDetalle, setIdDetalle] = useState(null);
+
+
+    const [categoriaEdicion, setCategoriaEdicion] = useState(null);
+    const [mostrarFormulario, setMostrarFormulario] = useState(false);
+    const [mensaje, setMensaje] = useState('');
+    const [errorAccion, setErrorAccion] = useState('');
+    const [idProcesando, setIdProcesando] = useState(null);
+
 
     // Esperar 350 ms antes de aplicar la búsqueda
     useEffect(() => {
@@ -110,10 +119,108 @@ export default function CategoriasListado() {
         setIdDetalle(null);
     }
 
+
+    function abrirFormularioNueva() {
+        setCategoriaEdicion(null);
+        setMostrarFormulario(true);
+        setIdDetalle(null);
+        setMensaje('');
+        setErrorAccion('');
+    }
+
+    function abrirFormularioEdicion(categoria) {
+        setCategoriaEdicion(categoria);
+        setMostrarFormulario(true);
+        setIdDetalle(null);
+        setMensaje('');
+        setErrorAccion('');
+    }
+
+    function guardarFinalizado(texto) {
+        setMostrarFormulario(false);
+        setCategoriaEdicion(null);
+        setMensaje(texto);
+        setErrorAccion('');
+
+        // Volver al listado completo para ver los cambios.
+        setBusqueda('');
+        setTextoAplicado('');
+        setEstado('');
+        setPagina(1);
+        setReintento((valor) => valor + 1);
+    }
+
+    async function alternarEstadoCategoria(categoria) {
+        const nuevoEstado = categoria.estado === 'activo'
+            ? 'inactivo'
+            : 'activo';
+
+        setIdProcesando(categoria.id_categoria);
+        setMensaje('');
+        setErrorAccion('');
+
+        try {
+            const respuesta = await api.patch(
+                `/api/categorias/${categoria.id_categoria}/estado`,
+                { estado: nuevoEstado }
+            );
+
+            setMensaje(respuesta.data.mensaje);
+            setIdDetalle(null);
+            setReintento((valor) => valor + 1);
+        } catch (err) {
+            setErrorAccion(
+                err.response?.data?.mensaje ||
+                'No se pudo cambiar el estado de la categoría.'
+            );
+        } finally {
+            setIdProcesando(null);
+        }
+    }
+
+    async function eliminarCategoria(categoria) {
+        if (categoria.productos_count > 0) {
+            setErrorAccion(
+                'No se puede eliminar una categoría con productos asociados.'
+            );
+            return;
+        }
+
+        const confirmar = window.confirm(
+            `¿Eliminar la categoría "${categoria.nombre}"? Esta acción no se puede deshacer.`
+        );
+
+        if (!confirmar) return;
+
+        setIdProcesando(categoria.id_categoria);
+        setMensaje('');
+        setErrorAccion('');
+
+        try {
+            const respuesta = await api.delete(
+                `/api/categorias/${categoria.id_categoria}`
+            );
+
+            setMensaje(respuesta.data.mensaje);
+            setIdDetalle(null);
+            setPagina(1);
+            setReintento((valor) => valor + 1);
+        } catch (err) {
+            setErrorAccion(
+                err.response?.data?.mensaje ||
+                'No se pudo eliminar la categoría.'
+            );
+        } finally {
+            setIdProcesando(null);
+        }
+    }
+
+
     const tieneFiltros = busqueda.trim() !== '' || estado !== '';
 
     return (
         <section aria-labelledby="titulo-categorias">
+            
             <div className="cabecera-pagina">
                 <div>
                     <h1 id="titulo-categorias">Categorías</h1>
@@ -121,7 +228,38 @@ export default function CategoriasListado() {
                         Consulta y organiza las categorías de productos.
                     </p>
                 </div>
+
+                <button
+                    type="button"
+                    className="boton"
+                    onClick={abrirFormularioNueva}
+                >
+                    Registrar categoría
+                </button>
             </div>
+
+
+            {mensaje && (
+                <div className="alerta alerta-exito" role="status">
+                    {mensaje}
+                </div>
+            )}
+
+            {errorAccion && (
+                <div className="alerta alerta-error" role="alert">
+                    {errorAccion}
+                </div>
+            )}
+
+            {mostrarFormulario && (
+                <FormularioCategoria
+                    key={categoriaEdicion?.id_categoria ?? 'nueva'}
+                    categoria={categoriaEdicion}
+                    onGuardado={guardarFinalizado}
+                    onCancelar={() => setMostrarFormulario(false)}
+                />
+            )}
+
 
             {/* Búsqueda y filtros */}
             <form
@@ -257,19 +395,52 @@ export default function CategoriasListado() {
                                             {categoria.productos_count} unid.
                                         </td>
 
+                                        
                                         <td className="acciones">
                                             <button
                                                 type="button"
                                                 className="boton boton-secundario boton-mini"
-                                                onClick={() =>
-                                                    setIdDetalle(
-                                                        categoria.id_categoria
-                                                    )
-                                                }
+                                                onClick={() => setIdDetalle(categoria.id_categoria)}
                                             >
                                                 Consultar
                                             </button>
+
+                                            <button
+                                                type="button"
+                                                className="boton boton-secundario boton-mini"
+                                                disabled={idProcesando !== null}
+                                                onClick={() => abrirFormularioEdicion(categoria)}
+                                            >
+                                                Editar
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="boton boton-secundario boton-mini"
+                                                disabled={idProcesando !== null}
+                                                onClick={() => alternarEstadoCategoria(categoria)}
+                                            >
+                                                {categoria.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="boton boton-peligro-tenue boton-mini"
+                                                disabled={
+                                                    idProcesando !== null ||
+                                                    categoria.productos_count > 0
+                                                }
+                                                title={
+                                                    categoria.productos_count > 0
+                                                        ? 'No se puede eliminar: tiene productos asociados'
+                                                        : 'Eliminar categoría'
+                                                }
+                                                onClick={() => eliminarCategoria(categoria)}
+                                            >
+                                                Eliminar
+                                            </button>
                                         </td>
+
                                     </tr>
                                 ))}
                             </tbody>
