@@ -120,5 +120,9 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
         Route::delete('/panel/usuarios/{usuario}', [UsuarioController::class, 'eliminar'])
             ->name('usuarios.eliminar');
+
+        //Página de integración React
+        Route::view('/panel/catalogos', 'catalogos.react')
+            ->name('catalogos.react');
     });
 });
